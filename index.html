@@ -4,10 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NFL Football Squares</title>
+    
+    <!-- Firebase SDK Modular Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDp0h2e8jAiiEeRoYSfr0y7ORHoZ5xujHM",
+            authDomain: "nfl-squares-a5209.firebaseapp.com",
+            databaseURL: "https://nfl-squares-a5209-default-rtdb.firebaseio.com",
+            projectId: "nfl-squares-a5209",
+            storageBucket: "nfl-squares-a5209.firebasestorage.app",
+            messagingSenderId: "1057153529322",
+            appId: "1:1057153529322:web:9475a82e7ab1d2e0702e93"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const boardRef = ref(db, 'boardData');
+
+        // Expose Firebase functions globally for the application
+        window.fbDatabase = db;
+        window.fbBoardRef = boardRef;
+        window.fbSet = set;
+        window.fbUpdate = update;
+        window.fbOnValue = onValue;
+
+        // Signal that Firebase is ready
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
 
     <style>
         :root {
@@ -31,18 +58,29 @@
             margin-bottom: 10px;
         }
 
-        /* View Only Banner */
-        .view-only-banner {
-            display: none;
-            background-color: #e9ecef;
-            color: #495057;
-            border: 1px solid #ced4da;
-            padding: 10px 20px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-size: 14px;
+        /* Realtime Connection Status Badge */
+        .sync-status {
+            background-color: #e2e3e5;
+            color: #383d41;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
             font-weight: 600;
-            text-align: center;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ffc107;
+        }
+
+        .status-dot.online {
+            background-color: #28a745;
         }
 
         .team-select-container {
@@ -190,8 +228,6 @@
         }
 
         button:hover { background-color: #555; }
-        button.share-btn { background-color: #28a745; }
-        button.share-btn:hover { background-color: #218838; }
         button.print-btn { background-color: #0076B6; }
         button.print-btn:hover { background-color: #005a8c; }
         button.danger { background-color: #a71d2a; }
@@ -399,27 +435,6 @@
             border-radius: 6px;
         }
 
-        body.view-only .edit-control {
-            display: none !important;
-        }
-
-        body.view-only .cell.square {
-            cursor: default;
-        }
-
-        body.view-only .cell.square:hover {
-            background-color: #fff;
-        }
-
-        body.view-only .cell.square.claimed:hover {
-            background-color: #d1e7dd;
-        }
-
-        body.view-only .score-input {
-            pointer-events: none;
-            opacity: 0.9;
-        }
-
         @media (max-width: 768px) {
             :root { --cell-size: 32px; }
             .cell { font-size: 9px; }
@@ -445,7 +460,7 @@
                 display: block !important;
             }
 
-            h1, .view-only-banner, .team-select-container, .score-container, .controls, .modal-overlay {
+            h1, .sync-status, .team-select-container, .score-container, .controls, .modal-overlay {
                 display: none !important;
             }
 
@@ -491,8 +506,9 @@
 
     <h1>NFL Football Squares Board</h1>
 
-    <div class="view-only-banner" id="viewOnlyBanner">
-        🔒 You are viewing a shared, read-only version of this board.
+    <div class="sync-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Connecting to Firebase...</span>
     </div>
 
     <div class="team-select-container">
@@ -531,10 +547,9 @@
     </div>
 
     <div class="controls">
-        <button class="edit-control" onclick="randomizeNumbers()">Generate Axis Numbers</button>
-        <button class="share-btn edit-control" onclick="shareViewOnlyLink()">Share Board</button>
+        <button onclick="randomizeNumbers()">Generate Axis Numbers</button>
         <button class="print-btn" onclick="window.print()">Print Board</button>
-        <button class="danger edit-control" onclick="clearBoard()">Reset Board</button>
+        <button class="danger" onclick="clearBoard()">Reset Board</button>
     </div>
 
     <div class="board-container">
@@ -560,20 +575,6 @@
     </div>
 
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-          apiKey: "AIzaSyDp0h2e8jAiiEeRoYSfr0y7ORHoZ5xujHM",
-          authDomain: "nfl-squares-a5209.firebaseapp.com",
-          databaseURL: "https://nfl-squares-a5209-default-rtdb.firebaseio.com",
-          projectId: "nfl-squares-a5209",
-          storageBucket: "nfl-squares-a5209.firebasestorage.app",
-          messagingSenderId: "1057153529322",
-          appId: "1:1057153529322:web:9475a82e7ab1d2e0702e93"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
         const nflTeams = [
             { name: "Arizona Cardinals", mascot: "Cardinals", color: "#97233F", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/ari.png" },
             { name: "Atlanta Falcons", mascot: "Falcons", color: "#A71930", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/atl.png" },
@@ -609,61 +610,27 @@
             { name: "Washington Commanders", mascot: "Commanders", color: "#5A1414", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/wsh.png" }
         ];
 
-        let isViewOnly = false;
-        let homeIndex = 11; // Green Bay Packers default
-        let awayIndex = 5;  // Chicago Bears default
-        let topNumbers = Array(10).fill('?');
-        let leftNumbers = Array(10).fill('?');
-        let squares = Array(100).fill('');
-        let quarterScores = {
-            home: ['', '', '', ''],
-            away: ['', '', '', '']
-        };
-        let lastAlertedWinners = ['', '', '', ''];
-
-        function initData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const viewData = urlParams.get('view');
-
-            if (viewData) {
-                try {
-                    const parsed = JSON.parse(decodeURIComponent(escape(atob(viewData))));
-                    homeIndex = parsed.h ?? 11;
-                    awayIndex = parsed.a ?? 5;
-                    topNumbers = parsed.tn || Array(10).fill('?');
-                    leftNumbers = parsed.ln || Array(10).fill('?');
-                    squares = parsed.s || Array(100).fill('');
-                    quarterScores = parsed.q || { home: ['', '', '', ''], away: ['', '', '', ''] };
-
-                    isViewOnly = true;
-                    document.body.classList.add('view-only');
-                    document.getElementById('viewOnlyBanner').style.display = 'block';
-                    document.getElementById('homeSelect').disabled = true;
-                    document.getElementById('awaySelect').disabled = true;
-                } catch (e) {
-                    console.error("Invalid shared link payload", e);
-                    loadLocalData();
-                }
-            } else {
-                loadLocalData();
-            }
-        }
-
-        function loadLocalData() {
-            homeIndex = localStorage.getItem('homeTeamIdx') !== null ? parseInt(localStorage.getItem('homeTeamIdx')) : 11;
-            awayIndex = localStorage.getItem('awayTeamIdx') !== null ? parseInt(localStorage.getItem('awayTeamIdx')) : 5;
-            topNumbers = JSON.parse(localStorage.getItem('topNumbers')) || Array(10).fill('?');
-            leftNumbers = JSON.parse(localStorage.getItem('leftNumbers')) || Array(10).fill('?');
-            squares = JSON.parse(localStorage.getItem('footballSquaresData')) || Array(100).fill('');
-            quarterScores = JSON.parse(localStorage.getItem('quarterScores')) || {
+        // Default local state
+        let state = {
+            homeIndex: 11, // Packers
+            awayIndex: 5,  // Bears
+            topNumbers: Array(10).fill('?'),
+            leftNumbers: Array(10).fill('?'),
+            squares: Array(100).fill(''),
+            quarterScores: {
                 home: ['', '', '', ''],
                 away: ['', '', '', '']
-            };
-        }
+            }
+        };
+
+        let lastAlertedWinners = ['', '', '', ''];
 
         function populateSelects() {
             const homeSelect = document.getElementById('homeSelect');
             const awaySelect = document.getElementById('awaySelect');
+
+            homeSelect.innerHTML = '';
+            awaySelect.innerHTML = '';
 
             nflTeams.forEach((team, idx) => {
                 const optH = new Option(team.name, idx);
@@ -672,67 +639,63 @@
                 awaySelect.add(optA);
             });
 
-            homeSelect.value = homeIndex;
-            awaySelect.value = awayIndex;
+            homeSelect.value = state.homeIndex;
+            awaySelect.value = state.awayIndex;
         }
 
-        function loadSavedScores() {
+        function syncInputsWithState() {
+            document.getElementById('homeSelect').value = state.homeIndex;
+            document.getElementById('awaySelect').value = state.awayIndex;
+
             for (let q = 1; q <= 4; q++) {
-                document.getElementById(`home_q${q}`).value = quarterScores.home[q - 1] ?? '';
-                document.getElementById(`away_q${q}`).value = quarterScores.away[q - 1] ?? '';
-            }
-        }
-
-        function updateTeams() {
-            homeIndex = document.getElementById('homeSelect').value;
-            awayIndex = document.getElementById('awaySelect').value;
-
-            if (!isViewOnly) {
-                localStorage.setItem('homeTeamIdx', homeIndex);
-                localStorage.setItem('awayTeamIdx', awayIndex);
+                document.getElementById(`home_q${q}`).value = state.quarterScores.home[q - 1] ?? '';
+                document.getElementById(`away_q${q}`).value = state.quarterScores.away[q - 1] ?? '';
             }
 
-            const homeTeam = nflTeams[homeIndex];
-            const awayTeam = nflTeams[awayIndex];
+            const homeTeam = nflTeams[state.homeIndex];
+            const awayTeam = nflTeams[state.awayIndex];
 
             document.documentElement.style.setProperty('--home-color', homeTeam.color);
             document.documentElement.style.setProperty('--away-color', awayTeam.color);
 
             document.getElementById('homeScoreLabel').textContent = homeTeam.mascot;
             document.getElementById('awayScoreLabel').textContent = awayTeam.mascot;
+        }
 
-            renderBoard();
+        function updateTeams() {
+            state.homeIndex = parseInt(document.getElementById('homeSelect').value, 10);
+            state.awayIndex = parseInt(document.getElementById('awaySelect').value, 10);
+
+            pushStateToFirebase();
         }
 
         function saveAndEvaluateScores(qIdx, teamSide) {
-            if (isViewOnly) return;
-
             const inputId = `${teamSide}_q${qIdx + 1}`;
             const inputVal = document.getElementById(inputId).value.trim();
-            const mascotName = teamSide === 'home' ? nflTeams[homeIndex].mascot : nflTeams[awayIndex].mascot;
+            const mascotName = teamSide === 'home' ? nflTeams[state.homeIndex].mascot : nflTeams[state.awayIndex].mascot;
 
             if (inputVal !== '' && !isNaN(inputVal)) {
                 const currentScore = parseInt(inputVal, 10);
 
                 if (qIdx > 0) {
-                    const prevVal = quarterScores[teamSide][qIdx - 1];
+                    const prevVal = state.quarterScores[teamSide][qIdx - 1];
                     if (prevVal !== '' && !isNaN(prevVal)) {
                         const prevScore = parseInt(prevVal, 10);
                         if (currentScore < prevScore) {
                             showErrorModal(`<strong>${mascotName}</strong> cannot have a Q${qIdx + 1} score of <strong>${currentScore}</strong> because their Q${qIdx} score was <strong>${prevScore}</strong>.<br><br>Cumulative game scores cannot decrease!`);
-                            document.getElementById(inputId).value = quarterScores[teamSide][qIdx] || '';
+                            document.getElementById(inputId).value = state.quarterScores[teamSide][qIdx] || '';
                             return;
                         }
                     }
                 }
 
                 if (qIdx < 3) {
-                    const nextVal = quarterScores[teamSide][qIdx + 1];
+                    const nextVal = state.quarterScores[teamSide][qIdx + 1];
                     if (nextVal !== '' && !isNaN(nextVal)) {
                         const nextScore = parseInt(nextVal, 10);
                         if (currentScore > nextScore) {
                             showErrorModal(`<strong>${mascotName}</strong> cannot have a Q${qIdx + 1} score of <strong>${currentScore}</strong> because their Q${qIdx + 2} score is recorded as <strong>${nextScore}</strong>.<br><br>Cumulative game scores cannot decrease!`);
-                            document.getElementById(inputId).value = quarterScores[teamSide][qIdx] || '';
+                            document.getElementById(inputId).value = state.quarterScores[teamSide][qIdx] || '';
                             return;
                         }
                     }
@@ -740,68 +703,39 @@
             }
 
             for (let q = 0; q < 4; q++) {
-                quarterScores.home[q] = document.getElementById(`home_q${q + 1}`).value.trim();
-                quarterScores.away[q] = document.getElementById(`away_q${q + 1}`).value.trim();
+                state.quarterScores.home[q] = document.getElementById(`home_q${q + 1}`).value.trim();
+                state.quarterScores.away[q] = document.getElementById(`away_q${q + 1}`).value.trim();
             }
-            localStorage.setItem('quarterScores', JSON.stringify(quarterScores));
 
-            renderBoard();
-
+            pushStateToFirebase();
             if (qIdx !== undefined) {
                 checkAndPopupQuarterWinner(qIdx);
             }
         }
 
         function checkAndPopupQuarterWinner(qIdx) {
-            const hVal = quarterScores.home[qIdx];
-            const aVal = quarterScores.away[qIdx];
+            const hVal = state.quarterScores.home[qIdx];
+            const aVal = state.quarterScores.away[qIdx];
 
             if (hVal !== '' && aVal !== '' && !isNaN(hVal) && !isNaN(aVal)) {
                 const hDigit = parseInt(hVal.slice(-1), 10);
                 const aDigit = parseInt(aVal.slice(-1), 10);
 
-                const colIndex = topNumbers.indexOf(hDigit);
-                const rowIndex = leftNumbers.indexOf(aDigit);
+                const colIndex = state.topNumbers.indexOf(hDigit);
+                const rowIndex = state.leftNumbers.indexOf(aDigit);
 
                 if (colIndex !== -1 && rowIndex !== -1) {
                     const cellIdx = rowIndex * 10 + colIndex;
-                    const owner = squares[cellIdx] ? `<strong>${squares[cellIdx]}</strong>` : '<em>Unclaimed Square</em>';
+                    const owner = state.squares[cellIdx] ? `<strong>${state.squares[cellIdx]}</strong>` : '<em>Unclaimed Square</em>';
                     const scoreKey = `${hVal}-${aVal}-${owner}`;
 
                     if (lastAlertedWinners[qIdx] !== scoreKey) {
                         lastAlertedWinners[qIdx] = scoreKey;
-                        showWinnerModal(`<strong>Q${qIdx + 1} Winner:</strong><br>${owner}<br>Square #${cellIdx + 1} (${nflTeams[homeIndex].mascot}: ${hVal}, ${nflTeams[awayIndex].mascot}: ${aVal})`);
+                        showWinnerModal(`<strong>Q${qIdx + 1} Winner:</strong><br>${owner}<br>Square #${cellIdx + 1} (${nflTeams[state.homeIndex].mascot}: ${hVal}, ${nflTeams[state.awayIndex].mascot}: ${aVal})`);
                     }
                 }
             } else {
                 lastAlertedWinners[qIdx] = '';
-            }
-        }
-
-        function evaluateAllQuarterWinnersForViewer() {
-            let winSummaries = [];
-
-            for (let q = 0; q < 4; q++) {
-                const hVal = quarterScores.home[q];
-                const aVal = quarterScores.away[q];
-
-                if (hVal !== '' && aVal !== '' && !isNaN(hVal) && !isNaN(aVal)) {
-                    const hDigit = parseInt(hVal.slice(-1), 10);
-                    const aDigit = parseInt(aVal.slice(-1), 10);
-
-                    const colIndex = topNumbers.indexOf(hDigit);
-                    const rowIndex = leftNumbers.indexOf(aDigit);
-
-                    if (colIndex !== -1 && rowIndex !== -1) {
-                        const cellIdx = rowIndex * 10 + colIndex;
-                        const owner = squares[cellIdx] ? `<strong>${squares[cellIdx]}</strong>` : '<em>Unclaimed Square</em>';
-                        winSummaries.push(`<strong>Q${q + 1}:</strong> ${owner} (Square #${cellIdx + 1} - ${nflTeams[homeIndex].mascot}: ${hVal}, ${nflTeams[awayIndex].mascot}: ${aVal})`);
-                    }
-                }
-            }
-
-            if (winSummaries.length > 0) {
-                showWinnerModal(winSummaries.join('<br><br>'));
             }
         }
 
@@ -823,15 +757,15 @@
             const winners = {};
 
             for (let q = 0; q < 4; q++) {
-                const hVal = quarterScores.home[q];
-                const aVal = quarterScores.away[q];
+                const hVal = state.quarterScores.home[q];
+                const aVal = state.quarterScores.away[q];
 
                 if (hVal !== '' && aVal !== '' && !isNaN(hVal) && !isNaN(aVal)) {
                     const hDigit = parseInt(hVal.slice(-1), 10);
                     const aDigit = parseInt(aVal.slice(-1), 10);
 
-                    const colIndex = topNumbers.indexOf(hDigit);
-                    const rowIndex = leftNumbers.indexOf(aDigit);
+                    const colIndex = state.topNumbers.indexOf(hDigit);
+                    const rowIndex = state.leftNumbers.indexOf(aDigit);
 
                     if (colIndex !== -1 && rowIndex !== -1) {
                         const cellIdx = rowIndex * 10 + colIndex;
@@ -843,144 +777,167 @@
             return winners;
         }
 
-        function randomizeNumbers() {
-            if (isViewOnly) return;
-            topNumbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
-            leftNumbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
-
-            localStorage.setItem('topNumbers', JSON.stringify(topNumbers));
-            localStorage.setItem('leftNumbers', JSON.stringify(leftNumbers));
-
-            renderBoard();
-        }
-
-        function claimSquare(idx) {
-            if (isViewOnly) return;
-            const currentOwner = squares[idx] || '';
-            const newOwner = prompt(`Enter owner name for Square #${idx + 1}:`, currentOwner);
-
-            if (newOwner !== null) {
-                squares[idx] = newOwner.trim();
-                localStorage.setItem('footballSquaresData', JSON.stringify(squares));
-                renderBoard();
-            }
-        }
-
-        function clearBoard() {
-            if (isViewOnly) return;
-            if (confirm("Are you sure you want to reset all squares, scores, and axis numbers?")) {
-                squares = Array(100).fill('');
-                topNumbers = Array(10).fill('?');
-                leftNumbers = Array(10).fill('?');
-                quarterScores = { home: ['', '', '', ''], away: ['', '', '', ''] };
-                lastAlertedWinners = ['', '', '', ''];
-
-                localStorage.removeItem('footballSquaresData');
-                localStorage.removeItem('topNumbers');
-                localStorage.removeItem('leftNumbers');
-                localStorage.removeItem('quarterScores');
-
-                loadSavedScores();
-                renderBoard();
-            }
-        }
-
-        function shareViewOnlyLink() {
-            const payload = {
-                h: parseInt(homeIndex, 10),
-                a: parseInt(awayIndex, 10),
-                tn: topNumbers,
-                ln: leftNumbers,
-                s: squares,
-                q: quarterScores
-            };
-
-            const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-            const baseUrl = window.location.origin + window.location.pathname;
-            const shareUrl = `${baseUrl}?view=${encoded}`;
-
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                alert("View-Only Share Link copied to clipboard!");
-            }).catch(err => {
-                console.error("Failed to copy link: ", err);
-            });
-        }
-
         function renderBoard() {
+            syncInputsWithState();
+
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
 
-            const homeTeam = nflTeams[homeIndex];
-            const awayTeam = nflTeams[awayIndex];
-            const winningSquares = getWinningSquares();
+            const homeTeam = nflTeams[state.homeIndex];
+            const awayTeam = nflTeams[state.awayIndex];
 
-            // 1. Top Left Corner
+            // Corner Cell
             const cornerCell = document.createElement('div');
             cornerCell.className = 'cell corner';
-            cornerCell.innerText = 'NFL';
+            cornerCell.innerText = 'NFL SQUARES';
             grid.appendChild(cornerCell);
 
-            // 2. Top Team Header
-            const topHeader = document.createElement('div');
-            topHeader.className = 'cell top-team-header';
-            topHeader.innerHTML = `<img class="header-logo" src="${homeTeam.logo}" alt="${homeTeam.name}"><span>${homeTeam.name}</span>`;
-            grid.appendChild(topHeader);
+            // Top Team Header (Home)
+            const topHeaderCell = document.createElement('div');
+            topHeaderCell.className = 'cell top-team-header';
+            topHeaderCell.innerHTML = `<img src="${homeTeam.logo}" class="header-logo" alt=""> ${homeTeam.name}`;
+            grid.appendChild(topHeaderCell);
 
-            // 3. Top Number Axis
-            topNumbers.forEach(num => {
-                const cell = document.createElement('div');
-                cell.className = 'cell header-num';
-                cell.innerText = num;
-                grid.appendChild(cell);
-            });
+            // Top Axis Numbers
+            for (let i = 0; i < 10; i++) {
+                const numCell = document.createElement('div');
+                numCell.className = 'cell header-num';
+                numCell.innerText = state.topNumbers[i];
+                grid.appendChild(numCell);
+            }
 
-            // 4. Side Team Header
-            const sideHeader = document.createElement('div');
-            sideHeader.className = 'cell side-team-header';
-            sideHeader.innerHTML = `<img class="header-logo" src="${awayTeam.logo}" alt="${awayTeam.name}"><span>${awayTeam.name}</span>`;
-            grid.appendChild(sideHeader);
+            // Side Team Header (Away)
+            const sideHeaderCell = document.createElement('div');
+            sideHeaderCell.className = 'cell side-team-header';
+            sideHeaderCell.innerHTML = `<img src="${awayTeam.logo}" class="header-logo" alt=""> ${awayTeam.name}`;
+            grid.appendChild(sideHeaderCell);
 
-            // 5. Grid Rows
+            const winningSquares = getWinningSquares();
+
+            // 10x10 Grid Rows
             for (let r = 0; r < 10; r++) {
-                // Side Axis Number
                 const leftNumCell = document.createElement('div');
                 leftNumCell.className = 'cell header-num';
-                leftNumCell.innerText = leftNumbers[r];
+                leftNumCell.innerText = state.leftNumbers[r];
                 grid.appendChild(leftNumCell);
 
-                // 10 Square Cells
                 for (let c = 0; c < 10; c++) {
-                    const idx = r * 10 + c;
+                    const squareIdx = r * 10 + c;
                     const squareCell = document.createElement('div');
-                    let className = 'cell square';
+                    squareCell.className = 'cell square';
 
-                    const ownerText = squares[idx] ? `<span class="square-owner">${squares[idx]}</span>` : '';
-                    if (squares[idx]) className += ' claimed';
-
-                    let winnerTagsHtml = '';
-                    if (winningSquares[idx]) {
-                        className += ' winner';
-                        winnerTagsHtml = `<div class="winner-tag">${winningSquares[idx].join(', ')}</div>`;
+                    const ownerName = state.squares[squareIdx];
+                    if (ownerName) {
+                        squareCell.classList.add('claimed');
                     }
 
-                    squareCell.className = className;
-                    squareCell.innerHTML = `${ownerText}${winnerTagsHtml}<span class="square-num">${idx + 1}</span>`;
-                    squareCell.onclick = () => claimSquare(idx);
+                    if (winningSquares[squareIdx]) {
+                        squareCell.classList.add('winner');
+                    }
+
+                    let contentHtml = `<div class="square-owner">${ownerName ? escapeHtml(ownerName) : ''}</div>`;
+                    if (winningSquares[squareIdx]) {
+                        contentHtml += `<div class="winner-tag">${winningSquares[squareIdx].join(' ')}</div>`;
+                    }
+                    contentHtml += `<div class="square-num">${squareIdx + 1}</div>`;
+
+                    squareCell.innerHTML = contentHtml;
+                    squareCell.onclick = () => claimSquare(squareIdx);
 
                     grid.appendChild(squareCell);
                 }
             }
         }
 
-        window.onload = () => {
-            initData();
-            populateSelects();
-            loadSavedScores();
-            updateTeams();
+        function claimSquare(idx) {
+            const currentOwner = state.squares[idx] || '';
+            const newOwner = prompt(`Enter name for Square #${idx + 1}:`, currentOwner);
 
-            if (isViewOnly) {
-                evaluateAllQuarterWinnersForViewer();
+            if (newOwner !== null) {
+                state.squares[idx] = newOwner.trim();
+                pushStateToFirebase();
             }
+        }
+
+        function randomizeNumbers() {
+            if (!confirm("Are you sure you want to generate new random numbers for the top and left axes?")) return;
+
+            const shuffle = (array) => {
+                const arr = [...array];
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            };
+
+            const baseNums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            state.topNumbers = shuffle(baseNums);
+            state.leftNumbers = shuffle(baseNums);
+
+            pushStateToFirebase();
+        }
+
+        function clearBoard() {
+            if (confirm("Are you sure you want to clear all names, scores, and axis numbers?")) {
+                state = {
+                    homeIndex: state.homeIndex,
+                    awayIndex: state.awayIndex,
+                    topNumbers: Array(10).fill('?'),
+                    leftNumbers: Array(10).fill('?'),
+                    squares: Array(100).fill(''),
+                    quarterScores: { home: ['', '', '', ''], away: ['', '', '', ''] }
+                };
+                lastAlertedWinners = ['', '', '', ''];
+                pushStateToFirebase();
+            }
+        }
+
+        function pushStateToFirebase() {
+            if (window.fbBoardRef && window.fbSet) {
+                window.fbSet(window.fbBoardRef, state)
+                    .catch((err) => console.error("Firebase update failed:", err));
+            }
+        }
+
+        function setupFirebaseListener() {
+            window.fbOnValue(window.fbBoardRef, (snapshot) => {
+                const data = snapshot.val();
+                
+                document.getElementById('statusDot').classList.add('online');
+                document.getElementById('statusText').textContent = 'Live Sync Active';
+
+                if (data) {
+                    state.homeIndex = data.homeIndex ?? 11;
+                    state.awayIndex = data.awayIndex ?? 5;
+                    state.topNumbers = data.topNumbers || Array(10).fill('?');
+                    state.leftNumbers = data.leftNumbers || Array(10).fill('?');
+                    state.squares = data.squares || Array(100).fill('');
+                    state.quarterScores = data.quarterScores || { home: ['', '', '', ''], away: ['', '', '', ''] };
+                } else {
+                    // Seed initial state into DB if empty
+                    pushStateToFirebase();
+                }
+
+                renderBoard();
+            }, (error) => {
+                console.error("Firebase Read Error:", error);
+                document.getElementById('statusDot').classList.remove('online');
+                document.getElementById('statusText').textContent = 'Sync Disconnected';
+            });
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        window.addEventListener('firebase-ready', () => {
+            populateSelects();
+            setupFirebaseListener();
+        });
+
+        window.onload = () => {
+            populateSelects();
         };
     </script>
 </body>
