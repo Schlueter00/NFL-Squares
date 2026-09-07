@@ -154,14 +154,12 @@
             z-index: 2;
         }
 
-        /* Hide HTML5 Spinner Arrows for Chrome, Safari, Edge, Opera */
+        /* Hide HTML5 Spinner Arrows */
         .score-input::-webkit-outer-spin-button,
         .score-input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-
-        /* Hide HTML5 Spinner Arrows for Firefox */
         .score-input[type=number] {
             -moz-appearance: textfield;
         }
@@ -227,7 +225,6 @@
             position: relative;
         }
 
-        /* Specialized Headers */
         .cell.corner {
             background-color: #e9ecef;
             grid-column: 1 / span 2;
@@ -270,7 +267,6 @@
             gap: 12px;
         }
 
-        /* Team Logo Sizing */
         .header-logo {
             width: 28px;
             height: 28px;
@@ -289,7 +285,6 @@
             color: #212529;
         }
 
-        /* Playable Squares */
         .cell.square {
             cursor: pointer;
             transition: background-color 0.15s;
@@ -302,7 +297,6 @@
             color: #0f5132;
         }
 
-        /* Winner Highlight */
         .cell.square.winner {
             background-color: var(--home-color) !important;
             color: #ffffff !important;
@@ -389,7 +383,7 @@
             font-size: 15px;
             color: #333;
             margin: 15px 0 20px 0;
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
         .modal-content button {
@@ -400,7 +394,6 @@
             border-radius: 6px;
         }
 
-        /* View-only rules */
         body.view-only .edit-control {
             display: none !important;
         }
@@ -419,7 +412,7 @@
 
         body.view-only .score-input {
             pointer-events: none;
-            opacity: 0.85;
+            opacity: 0.9;
         }
 
         @media (max-width: 768px) {
@@ -434,7 +427,6 @@
             .team-score-label { font-size: 11px; }
         }
 
-        /* PRINT STYLES */
         @media print {
             @page {
                 size: portrait;
@@ -703,7 +695,6 @@
             if (inputVal !== '' && !isNaN(inputVal)) {
                 const currentScore = parseInt(inputVal, 10);
 
-                // Check against previous quarter
                 if (qIdx > 0) {
                     const prevVal = quarterScores[teamSide][qIdx - 1];
                     if (prevVal !== '' && !isNaN(prevVal)) {
@@ -716,7 +707,6 @@
                     }
                 }
 
-                // Check against next quarter if it already has a score
                 if (qIdx < 3) {
                     const nextVal = quarterScores[teamSide][qIdx + 1];
                     if (nextVal !== '' && !isNaN(nextVal)) {
@@ -730,7 +720,6 @@
                 }
             }
 
-            // Save valid scores
             for (let q = 0; q < 4; q++) {
                 quarterScores.home[q] = document.getElementById(`home_q${q + 1}`).value.trim();
                 quarterScores.away[q] = document.getElementById(`away_q${q + 1}`).value.trim();
@@ -767,6 +756,34 @@
                 }
             } else {
                 lastAlertedWinners[qIdx] = '';
+            }
+        }
+
+        // Trigger popups for viewers opening a shared link
+        function evaluateAllQuarterWinnersForViewer() {
+            let winSummaries = [];
+
+            for (let q = 0; q < 4; q++) {
+                const hVal = quarterScores.home[q];
+                const aVal = quarterScores.away[q];
+
+                if (hVal !== '' && aVal !== '' && !isNaN(hVal) && !isNaN(aVal)) {
+                    const hDigit = parseInt(hVal.slice(-1), 10);
+                    const aDigit = parseInt(aVal.slice(-1), 10);
+
+                    const colIndex = topNumbers.indexOf(hDigit);
+                    const rowIndex = leftNumbers.indexOf(aDigit);
+
+                    if (colIndex !== -1 && rowIndex !== -1) {
+                        const cellIdx = rowIndex * 10 + colIndex;
+                        const owner = squares[cellIdx] ? `<strong>${squares[cellIdx]}</strong>` : '<em>Unclaimed Square</em>';
+                        winSummaries.push(`<strong>Q${q + 1}:</strong> ${owner} (Square #${cellIdx + 1} - ${nflTeams[homeIndex].mascot}: ${hVal}, ${nflTeams[awayIndex].mascot}: ${aVal})`);
+                    }
+                }
+            }
+
+            if (winSummaries.length > 0) {
+                showWinnerModal(winSummaries.join('<br><br>'));
             }
         }
 
@@ -822,7 +839,7 @@
             corner.textContent = 'Squares';
             grid.appendChild(corner);
 
-            // 2. Home Team Header (Top)
+            // 2. Home Team Header
             const topHeader = document.createElement('div');
             topHeader.className = 'cell top-team-header';
             
@@ -838,7 +855,7 @@
             topHeader.appendChild(homeText);
             grid.appendChild(topHeader);
 
-            // 3. Away Team Header (Left)
+            // 3. Away Team Header
             const sideHeader = document.createElement('div');
             sideHeader.className = 'cell side-team-header';
 
@@ -864,7 +881,7 @@
                 grid.appendChild(cell);
             }
 
-            // 5. Side Numbers + 10x10 Playable Grid
+            // 5. Side Numbers + Grid
             for (let row = 0; row < 10; row++) {
                 const sideNumCell = document.createElement('div');
                 sideNumCell.className = 'cell header-num';
@@ -968,12 +985,12 @@
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(shareUrl).then(() => {
-                    alert('Share link copied to clipboard!');
+                    alert('Updated share link copied to clipboard!');
                 }).catch(() => {
-                    prompt('Copy this share link:', shareUrl);
+                    prompt('Copy this updated share link:', shareUrl);
                 });
             } else {
-                prompt('Copy this share link:', shareUrl);
+                prompt('Copy this updated share link:', shareUrl);
             }
         }
 
@@ -982,6 +999,11 @@
         populateSelects();
         loadSavedScores();
         updateTeams();
+
+        // If viewed via shared link, automatically pop up winners on load
+        if (isViewOnly) {
+            evaluateAllQuarterWinnersForViewer();
+        }
     </script>
 </body>
 </html>
