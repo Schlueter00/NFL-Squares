@@ -3,86 +3,564 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NFL Game Day Squares</title>
+    <title>NFL Football Squares</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    
-    <!-- Firebase App and Realtime Database SDKs -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
         :root {
-            --primary: #013369;
-            --accent-red: #d50a0a;
-            --bg: #f4f7f9;
-            --card-bg: #ffffff;
-            --border: #ccc;
+            --home-color: #203731; /* Green Bay Green default */
+            --away-color: #0b162a; /* Chicago Bears Navy default */
+            --cell-size: 50px;
         }
 
-        * { box-sizing: border-box; }
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: #2c3e50; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        h1 { margin: 5px 0 15px; color: var(--primary); text-transform: uppercase; font-size: 1.6rem; text-align: center; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-        .app-container { width: 100%; max-width: 750px; background: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-top: 6px solid var(--primary); }
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
 
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .controls-full { grid-column: span 2; display: flex; gap: 10px; }
+        /* View Only Banner */
+        .view-only-banner {
+            display: none;
+            background-color: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+            padding: 10px 20px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+        }
 
-        input, button { padding: 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.85rem; }
-        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; flex: 1; }
-        button.btn-red { background: var(--accent-red); }
-        button.btn-green { background: #27ae60; }
+        .team-select-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            background: #fff;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
 
-        /* Squares Grid Layout */
-        .board-wrapper { overflow-x: auto; margin-top: 15px; }
-        .squares-grid { display: grid; grid-template-columns: 40px repeat(10, minmax(40px, 1fr)); gap: 2px; background: var(--border); border: 2px solid var(--primary); min-width: 500px; }
-        
-        .cell { background: white; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; text-align: center; word-break: break-word; padding: 2px; }
-        .cell.header { background: var(--primary); color: white; font-size: 0.8rem; }
-        .cell.number-header { background: #e0e6ed; color: #333; font-size: 0.9rem; }
-        .cell.square { cursor: pointer; transition: background 0.2s; }
-        .cell.square:hover { background: #eef5fc; }
-        .cell.square.claimed { background: #d1ecf1; color: #0c5460; cursor: default; }
+        .select-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
 
-        .score-board { display: flex; justify-content: space-around; background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; }
+        .select-group label {
+            font-weight: bold;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #555;
+        }
+
+        select {
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Score Tracker Panel */
+        .score-container {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            max-width: 650px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .score-container h3 {
+            margin: 0;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #333;
+        }
+
+        .score-grid {
+            display: grid;
+            grid-template-columns: 110px repeat(4, 1fr);
+            gap: 8px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .score-grid-header {
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #666;
+            text-align: center;
+        }
+
+        .team-score-label {
+            font-weight: bold;
+            font-size: 13px;
+            text-align: right;
+            padding-right: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .score-input {
+            width: 100%;
+            padding: 6px;
+            font-size: 15px;
+            text-align: center;
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 6px;
+            font-weight: bold;
+            box-sizing: border-box;
+            color: #ffffff;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .score-input.home-score-input {
+            background-color: var(--home-color);
+        }
+
+        .score-input.away-score-input {
+            background-color: var(--away-color);
+        }
+
+        .score-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #333333;
+            transform: scale(1.05);
+            z-index: 2;
+        }
+
+        /* Hide HTML5 Spinner Arrows */
+        .score-input::-webkit-outer-spin-button,
+        .score-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .score-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover { background-color: #555; }
+        button.share-btn { background-color: #28a745; }
+        button.share-btn:hover { background-color: #218838; }
+        button.print-btn { background-color: #0076B6; }
+        button.print-btn:hover { background-color: #005a8c; }
+        button.danger { background-color: #a71d2a; }
+        button.danger:hover { background-color: #76121b; }
+
+        /* Board Styling */
+        .board-container {
+            display: inline-block;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .grid-wrapper {
+            display: grid;
+            grid-template-columns: var(--cell-size) var(--cell-size) repeat(10, var(--cell-size));
+            grid-template-rows: var(--cell-size) var(--cell-size) repeat(10, var(--cell-size));
+            gap: 1px;
+            background-color: #000;
+            border: 2px solid #000;
+        }
+
+        .cell {
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            user-select: none;
+            padding: 2px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .cell.corner {
+            background-color: #e9ecef;
+            grid-column: 1 / span 2;
+            grid-row: 1 / span 2;
+            font-size: 11px;
+            color: #6c757d;
+        }
+
+        .cell.top-team-header {
+            grid-column: 3 / span 10;
+            grid-row: 1;
+            background-color: var(--home-color);
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .cell.side-team-header {
+            grid-column: 1;
+            grid-row: 3 / span 10;
+            background-color: var(--away-color);
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .header-logo {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .side-team-header .header-logo {
+            transform: rotate(90deg);
+        }
+
+        .cell.header-num {
+            background-color: #e9ecef;
+            font-size: 16px;
+            font-weight: bold;
+            color: #212529;
+        }
+
+        .cell.square {
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+
+        .cell.square:hover { background-color: #f0f0f0; }
+
+        .cell.square.claimed {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .cell.square.winner {
+            background-color: var(--home-color) !important;
+            color: #ffffff !important;
+            box-shadow: inset 0 0 0 2px #fff;
+        }
+
+        .winner-tag {
+            font-size: 8px;
+            font-weight: 800;
+            background: #ffffff;
+            color: #000000;
+            padding: 1px 3px;
+            border-radius: 3px;
+            margin-top: 1px;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .square-num {
+            position: absolute;
+            bottom: 2px;
+            right: 3px;
+            font-size: 9px;
+            font-weight: normal;
+            color: #888;
+            pointer-events: none;
+            line-height: 1;
+        }
+
+        .cell.square.claimed .square-num {
+            color: #0f5132;
+            opacity: 0.65;
+        }
+
+        .cell.square.winner .square-num {
+            color: #ffffff !important;
+            opacity: 0.8;
+        }
+
+        .square-owner {
+            word-break: break-word;
+            padding-bottom: 2px;
+        }
+
+        /* Modal Base */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            max-width: 380px;
+            width: 90%;
+            animation: popIn 0.25s ease-out;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            font-size: 22px;
+        }
+
+        .modal-content.winner-modal h2 { color: #28a745; }
+        .modal-content.error-modal h2 { color: #dc3545; }
+
+        .modal-content p {
+            font-size: 15px;
+            color: #333;
+            margin: 15px 0 20px 0;
+            line-height: 1.5;
+        }
+
+        .modal-content button {
+            background-color: var(--home-color);
+            color: white;
+            padding: 8px 24px;
+            font-size: 14px;
+            border-radius: 6px;
+        }
+
+        body.view-only .edit-control {
+            display: none !important;
+        }
+
+        body.view-only .cell.square {
+            cursor: default;
+        }
+
+        body.view-only .cell.square:hover {
+            background-color: #fff;
+        }
+
+        body.view-only .cell.square.claimed:hover {
+            background-color: #d1e7dd;
+        }
+
+        body.view-only .score-input {
+            pointer-events: none;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            :root { --cell-size: 32px; }
+            .cell { font-size: 9px; }
+            .cell.header-num { font-size: 11px; }
+            .header-logo { width: 18px; height: 18px; }
+            .cell.top-team-header, .cell.side-team-header { font-size: 12px; }
+            .square-num { font-size: 7px; bottom: 1px; right: 2px; }
+            .winner-tag { font-size: 6px; padding: 1px 2px; }
+            .score-grid { grid-template-columns: 80px repeat(4, 1fr); }
+            .team-score-label { font-size: 11px; }
+        }
+
+        @media print {
+            @page {
+                size: portrait;
+                margin: 0.5in;
+            }
+
+            body {
+                background-color: #fff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: block !important;
+            }
+
+            h1, .view-only-banner, .team-select-container, .score-container, .controls, .modal-overlay {
+                display: none !important;
+            }
+
+            .board-container {
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 auto !important;
+                display: flex !important;
+                justify-content: center !important;
+            }
+
+            :root {
+                --cell-size: 58px;
+            }
+
+            .grid-wrapper {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .cell.top-team-header, .cell.side-team-header {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .cell.square.claimed {
+                background-color: #e2e2e2 !important;
+                color: #000 !important;
+            }
+
+            .cell.square.winner {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .square-num {
+                color: #555 !important;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <h1>NFL Game Day Squares</h1>
+    <h1>NFL Football Squares Board</h1>
 
-    <div class="app-container">
-        <div class="controls">
-            <div>
-                <label style="font-size: 0.7rem; font-weight: bold;">YOUR NAME:</label>
-                <input type="text" id="playerName" value="Player 1" onchange="savePlayerName()" style="width: 100%;">
-            </div>
-            <div>
-                <label style="font-size: 0.7rem; font-weight: bold;">GAME ROOM ID:</label>
-                <input type="text" id="roomIdInput" style="width: 100%;" readonly>
-            </div>
-            <div class="controls-full">
-                <button class="btn-green" onclick="copyInviteLink()">Copy Invite Link 🔗</button>
-                <button class="btn-red" onclick="randomizeNumbers()">Randomize Numbers 🎲</button>
-                <button onclick="resetGrid()">Clear Board 🔄</button>
-            </div>
+    <div class="view-only-banner" id="viewOnlyBanner">
+        🔒 You are viewing a shared, read-only version of this board.
+    </div>
+
+    <div class="team-select-container">
+        <div class="select-group">
+            <label for="homeSelect">Home Team (Top Axis)</label>
+            <select id="homeSelect" onchange="updateTeams()"></select>
         </div>
-
-        <div class="score-board">
-            <div>AFC/Home Team: <span id="team-top-display">Home</span></div>
-            <div>NFC/Away Team: <span id="team-left-display">Away</span></div>
+        <div class="select-group">
+            <label for="awaySelect">Away Team (Left Axis)</label>
+            <select id="awaySelect" onchange="updateTeams()"></select>
         </div>
+    </div>
 
-        <div class="board-wrapper">
-            <div id="squares-grid" class="squares-grid"></div>
+    <!-- Quarter Scores Input Panel -->
+    <div class="score-container">
+        <h3>Game Scores</h3>
+        <div class="score-grid">
+            <div></div>
+            <div class="score-grid-header">Q1</div>
+            <div class="score-grid-header">Q2</div>
+            <div class="score-grid-header">Q3</div>
+            <div class="score-grid-header">Q4</div>
+
+            <div class="team-score-label" id="homeScoreLabel">Home</div>
+            <input type="number" id="home_q1" class="score-input home-score-input" min="0" onchange="saveAndEvaluateScores(0, 'home')">
+            <input type="number" id="home_q2" class="score-input home-score-input" min="0" onchange="saveAndEvaluateScores(1, 'home')">
+            <input type="number" id="home_q3" class="score-input home-score-input" min="0" onchange="saveAndEvaluateScores(2, 'home')">
+            <input type="number" id="home_q4" class="score-input home-score-input" min="0" onchange="saveAndEvaluateScores(3, 'home')">
+
+            <div class="team-score-label" id="awayScoreLabel">Away</div>
+            <input type="number" id="away_q1" class="score-input away-score-input" min="0" onchange="saveAndEvaluateScores(0, 'away')">
+            <input type="number" id="away_q2" class="score-input away-score-input" min="0" onchange="saveAndEvaluateScores(1, 'away')">
+            <input type="number" id="away_q3" class="score-input away-score-input" min="0" onchange="saveAndEvaluateScores(2, 'away')">
+            <input type="number" id="away_q4" class="score-input away-score-input" min="0" onchange="saveAndEvaluateScores(3, 'away')">
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="edit-control" onclick="randomizeNumbers()">Generate Axis Numbers</button>
+        <button class="share-btn edit-control" onclick="shareViewOnlyLink()">Share Board</button>
+        <button class="print-btn" onclick="window.print()">Print Board</button>
+        <button class="danger edit-control" onclick="clearBoard()">Reset Board</button>
+    </div>
+
+    <div class="board-container">
+        <div class="grid-wrapper" id="grid"></div>
+    </div>
+
+    <!-- Winner Modal Popup -->
+    <div class="modal-overlay" id="winnerModal">
+        <div class="modal-content winner-modal">
+            <h2>🎉 Winner Announced!</h2>
+            <p id="winnerModalText"></p>
+            <button onclick="closeModal('winnerModal')">Awesome!</button>
+        </div>
+    </div>
+
+    <!-- Score Error Modal Popup -->
+    <div class="modal-overlay" id="errorModal">
+        <div class="modal-content error-modal">
+            <h2>⚠️ Invalid Score Entry</h2>
+            <p id="errorModalText"></p>
+            <button onclick="closeModal('errorModal')">Got It</button>
         </div>
     </div>
 
     <script>
-        // -------------------------------------------------------------
-        // 1. FIREBASE CONFIGURATION
-        // -------------------------------------------------------------
+        // Firebase Configuration
         const firebaseConfig = {
           apiKey: "AIzaSyDp0h2e8jAiiEeRoYSfr0y7ORHoZ5xujHM",
           authDomain: "nfl-squares-a5209.firebaseapp.com",
@@ -96,144 +574,414 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // -------------------------------------------------------------
-        // 2. ROOM & PLAYER SETUP
-        // -------------------------------------------------------------
-        const urlParams = new URLSearchParams(window.location.search);
-        let roomId = urlParams.get('game');
-        if (!roomId) {
-            roomId = 'nfl-room-' + Math.random().toString(36).substring(2, 7);
-            window.history.replaceState({}, '', `?game=${roomId}`);
-        }
-        document.getElementById('roomIdInput').value = roomId;
+        const nflTeams = [
+            { name: "Arizona Cardinals", mascot: "Cardinals", color: "#97233F", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/ari.png" },
+            { name: "Atlanta Falcons", mascot: "Falcons", color: "#A71930", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/atl.png" },
+            { name: "Baltimore Ravens", mascot: "Ravens", color: "#241773", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/bal.png" },
+            { name: "Buffalo Bills", mascot: "Bills", color: "#00338D", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png" },
+            { name: "Carolina Panthers", mascot: "Panthers", color: "#0085CA", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/car.png" },
+            { name: "Chicago Bears", mascot: "Bears", color: "#0B162A", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/chi.png" },
+            { name: "Cincinnati Bengals", mascot: "Bengals", color: "#FB4F14", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/cin.png" },
+            { name: "Cleveland Browns", mascot: "Browns", color: "#311D00", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/cle.png" },
+            { name: "Dallas Cowboys", mascot: "Cowboys", color: "#002244", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png" },
+            { name: "Denver Broncos", mascot: "Broncos", color: "#FB4F14", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/den.png" },
+            { name: "Detroit Lions", mascot: "Lions", color: "#0076B6", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/det.png" },
+            { name: "Green Bay Packers", mascot: "Packers", color: "#203731", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/gb.png" },
+            { name: "Houston Texans", mascot: "Texans", color: "#03202F", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/hou.png" },
+            { name: "Indianapolis Colts", mascot: "Colts", color: "#002C5F", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/ind.png" },
+            { name: "Jacksonville Jaguars", mascot: "Jaguars", color: "#006778", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/jax.png" },
+            { name: "Kansas City Chiefs", mascot: "Chiefs", color: "#E31837", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png" },
+            { name: "Las Vegas Raiders", mascot: "Raiders", color: "#000000", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/lv.png" },
+            { name: "Los Angeles Chargers", mascot: "Chargers", color: "#0073CF", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/lac.png" },
+            { name: "Los Angeles Rams", mascot: "Rams", color: "#003594", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/lar.png" },
+            { name: "Miami Dolphins", mascot: "Dolphins", color: "#008E97", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/mia.png" },
+            { name: "Minnesota Vikings", mascot: "Vikings", color: "#4F2683", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/min.png" },
+            { name: "New England Patriots", mascot: "Patriots", color: "#002244", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png" },
+            { name: "New Orleans Saints", mascot: "Saints", color: "#D3BC8D", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/no.png" },
+            { name: "New York Giants", mascot: "Giants", color: "#0B2265", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png" },
+            { name: "New York Jets", mascot: "Jets", color: "#125740", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/nyj.png" },
+            { name: "Philadelphia Eagles", mascot: "Eagles", color: "#004C54", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/phi.png" },
+            { name: "Pittsburgh Steelers", mascot: "Steelers", color: "#FFB612", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/pit.png" },
+            { name: "San Francisco 49ers", mascot: "49ers", color: "#AA0000", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/sf.png" },
+            { name: "Seattle Seahawks", mascot: "Seahawks", color: "#002244", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/sea.png" },
+            { name: "Tampa Bay Buccaneers", mascot: "Buccaneers", color: "#A71930", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/tb.png" },
+            { name: "Tennessee Titans", mascot: "Titans", color: "#4B92DB", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/ten.png" },
+            { name: "Washington Commanders", mascot: "Commanders", color: "#5A1414", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/wsh.png" }
+        ];
 
-        let myPlayerId = localStorage.getItem('nfl_player_id');
-        if (!myPlayerId) {
-            myPlayerId = 'user_' + Math.random().toString(36).substring(2, 9);
-            localStorage.setItem('nfl_player_id', myPlayerId);
-        }
+        let isViewOnly = false;
+        let homeIndex = 11; // Green Bay Packers default
+        let awayIndex = 5;  // Chicago Bears default
+        let topNumbers = Array(10).fill('?');
+        let leftNumbers = Array(10).fill('?');
+        let squares = Array(100).fill('');
+        let quarterScores = {
+            home: ['', '', '', ''],
+            away: ['', '', '', '']
+        };
+        let lastAlertedWinners = ['', '', '', ''];
 
-        const roomRef = db.ref(`nfl_squares/${roomId}`);
+        function initData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const viewData = urlParams.get('view');
 
-        // Saved name sync
-        const savedName = localStorage.getItem('nfl_player_name');
-        if (savedName) document.getElementById('playerName').value = savedName;
+            if (viewData) {
+                try {
+                    const parsed = JSON.parse(decodeURIComponent(escape(atob(viewData))));
+                    homeIndex = parsed.h ?? 11;
+                    awayIndex = parsed.a ?? 5;
+                    topNumbers = parsed.tn || Array(10).fill('?');
+                    leftNumbers = parsed.ln || Array(10).fill('?');
+                    squares = parsed.s || Array(100).fill('');
+                    quarterScores = parsed.q || { home: ['', '', '', ''], away: ['', '', '', ''] };
 
-        function savePlayerName() {
-            const name = document.getElementById('playerName').value || 'Anonymous';
-            localStorage.setItem('nfl_player_name', name);
-        }
-
-        // -------------------------------------------------------------
-        // 3. REALTIME SYNC LISTENERS
-        // -------------------------------------------------------------
-        roomRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (!data) {
-                initializeBoard();
+                    isViewOnly = true;
+                    document.body.classList.add('view-only');
+                    document.getElementById('viewOnlyBanner').style.display = 'block';
+                    document.getElementById('homeSelect').disabled = true;
+                    document.getElementById('awaySelect').disabled = true;
+                } catch (e) {
+                    console.error("Invalid shared link payload", e);
+                    loadLocalData();
+                }
             } else {
-                renderBoard(data);
+                loadLocalData();
             }
-        });
+        }
 
-        // -------------------------------------------------------------
-        // 4. BOARD ACTIONS & LOGIC
-        // -------------------------------------------------------------
-        function initializeBoard() {
-            // Default 10x10 empty squares structure
-            const initialGrid = {};
-            for (let r = 0; r < 10; r++) {
-                for (let c = 0; c < 10; c++) {
-                    initialGrid[`${r}_${c}`] = { owner: '', ownerId: '' };
+        function loadLocalData() {
+            homeIndex = localStorage.getItem('homeTeamIdx') !== null ? parseInt(localStorage.getItem('homeTeamIdx')) : 11;
+            awayIndex = localStorage.getItem('awayTeamIdx') !== null ? parseInt(localStorage.getItem('awayTeamIdx')) : 5;
+            topNumbers = JSON.parse(localStorage.getItem('topNumbers')) || Array(10).fill('?');
+            leftNumbers = JSON.parse(localStorage.getItem('leftNumbers')) || Array(10).fill('?');
+            squares = JSON.parse(localStorage.getItem('footballSquaresData')) || Array(100).fill('');
+            quarterScores = JSON.parse(localStorage.getItem('quarterScores')) || {
+                home: ['', '', '', ''],
+                away: ['', '', '', '']
+            };
+        }
+
+        function populateSelects() {
+            const homeSelect = document.getElementById('homeSelect');
+            const awaySelect = document.getElementById('awaySelect');
+
+            nflTeams.forEach((team, idx) => {
+                const optH = new Option(team.name, idx);
+                const optA = new Option(team.name, idx);
+                homeSelect.add(optH);
+                awaySelect.add(optA);
+            });
+
+            homeSelect.value = homeIndex;
+            awaySelect.value = awayIndex;
+        }
+
+        function loadSavedScores() {
+            for (let q = 1; q <= 4; q++) {
+                document.getElementById(`home_q${q}`).value = quarterScores.home[q - 1] ?? '';
+                document.getElementById(`away_q${q}`).value = quarterScores.away[q - 1] ?? '';
+            }
+        }
+
+        function updateTeams() {
+            homeIndex = document.getElementById('homeSelect').value;
+            awayIndex = document.getElementById('awaySelect').value;
+
+            if (!isViewOnly) {
+                localStorage.setItem('homeTeamIdx', homeIndex);
+                localStorage.setItem('awayTeamIdx', awayIndex);
+            }
+
+            const homeTeam = nflTeams[homeIndex];
+            const awayTeam = nflTeams[awayIndex];
+
+            document.documentElement.style.setProperty('--home-color', homeTeam.color);
+            document.documentElement.style.setProperty('--away-color', awayTeam.color);
+
+            document.getElementById('homeScoreLabel').textContent = homeTeam.mascot;
+            document.getElementById('awayScoreLabel').textContent = awayTeam.mascot;
+
+            renderBoard();
+        }
+
+        function saveAndEvaluateScores(qIdx, teamSide) {
+            if (isViewOnly) return;
+
+            const inputId = `${teamSide}_q${qIdx + 1}`;
+            const inputVal = document.getElementById(inputId).value.trim();
+            const mascotName = teamSide === 'home' ? nflTeams[homeIndex].mascot : nflTeams[awayIndex].mascot;
+
+            if (inputVal !== '' && !isNaN(inputVal)) {
+                const currentScore = parseInt(inputVal, 10);
+
+                if (qIdx > 0) {
+                    const prevVal = quarterScores[teamSide][qIdx - 1];
+                    if (prevVal !== '' && !isNaN(prevVal)) {
+                        const prevScore = parseInt(prevVal, 10);
+                        if (currentScore < prevScore) {
+                            showErrorModal(`<strong>${mascotName}</strong> cannot have a Q${qIdx + 1} score of <strong>${currentScore}</strong> because their Q${qIdx} score was <strong>${prevScore}</strong>.<br><br>Cumulative game scores cannot decrease!`);
+                            document.getElementById(inputId).value = quarterScores[teamSide][qIdx] || '';
+                            return;
+                        }
+                    }
+                }
+
+                if (qIdx < 3) {
+                    const nextVal = quarterScores[teamSide][qIdx + 1];
+                    if (nextVal !== '' && !isNaN(nextVal)) {
+                        const nextScore = parseInt(nextVal, 10);
+                        if (currentScore > nextScore) {
+                            showErrorModal(`<strong>${mascotName}</strong> cannot have a Q${qIdx + 1} score of <strong>${currentScore}</strong> because their Q${qIdx + 2} score is recorded as <strong>${nextScore}</strong>.<br><br>Cumulative game scores cannot decrease!`);
+                            document.getElementById(inputId).value = quarterScores[teamSide][qIdx] || '';
+                            return;
+                        }
+                    }
                 }
             }
 
-            roomRef.set({
-                topNumbers: ['?', '?', '?', '?', '?', '?', '?', '?', '?', '?'],
-                leftNumbers: ['?', '?', '?', '?', '?', '?', '?', '?', '?', '?'],
-                grid: initialGrid
-            });
+            for (let q = 0; q < 4; q++) {
+                quarterScores.home[q] = document.getElementById(`home_q${q + 1}`).value.trim();
+                quarterScores.away[q] = document.getElementById(`away_q${q + 1}`).value.trim();
+            }
+            localStorage.setItem('quarterScores', JSON.stringify(quarterScores));
+
+            renderBoard();
+
+            if (qIdx !== undefined) {
+                checkAndPopupQuarterWinner(qIdx);
+            }
         }
 
-        function claimSquare(row, col, currentOwner) {
-            const playerName = document.getElementById('playerName').value || 'Anonymous';
-            
-            // Toggle selection if empty or if clicked by current owner
-            if (!currentOwner) {
-                roomRef.child(`grid/${row}_${col}`).set({ owner: playerName, ownerId: myPlayerId });
-            } else if (currentOwner === playerName) {
-                roomRef.child(`grid/${row}_${col}`).set({ owner: '', ownerId: '' });
+        function checkAndPopupQuarterWinner(qIdx) {
+            const hVal = quarterScores.home[qIdx];
+            const aVal = quarterScores.away[qIdx];
+
+            if (hVal !== '' && aVal !== '' && !isNaN(hVal) && !isNaN(aVal)) {
+                const hDigit = parseInt(hVal.slice(-1), 10);
+                const aDigit = parseInt(aVal.slice(-1), 10);
+
+                const colIndex = topNumbers.indexOf(hDigit);
+                const rowIndex = leftNumbers.indexOf(aDigit);
+
+                if (colIndex !== -1 && rowIndex !== -1) {
+                    const cellIdx = rowIndex * 10 + colIndex;
+                    const owner = squares[cellIdx] ? `<strong>${squares[cellIdx]}</strong>` : '<em>Unclaimed Square</em>';
+                    const scoreKey = `${hVal}-${aVal}-${owner}`;
+
+                    if (lastAlertedWinners[qIdx] !== scoreKey) {
+                        lastAlertedWinners[qIdx] = scoreKey;
+                        showWinnerModal(`<strong>Q${qIdx + 1} Winner:</strong><br>${owner}<br>Square #${cellIdx + 1} (${nflTeams[homeIndex].mascot}: ${hVal}, ${nflTeams[awayIndex].mascot}: ${aVal})`);
+                    }
+                }
+            } else {
+                lastAlertedWinners[qIdx] = '';
             }
+        }
+
+        function evaluateAllQuarterWinnersForViewer() {
+            let winSummaries = [];
+
+            for (let q = 0; q < 4; q++) {
+                const hVal = quarterScores.home[q];
+                const aVal = quarterScores.away[q];
+
+                if (hVal !== '' && aVal !== '' && !isNaN(hVal) && !isNaN(aVal)) {
+                    const hDigit = parseInt(hVal.slice(-1), 10);
+                    const aDigit = parseInt(aVal.slice(-1), 10);
+
+                    const colIndex = topNumbers.indexOf(hDigit);
+                    const rowIndex = leftNumbers.indexOf(aDigit);
+
+                    if (colIndex !== -1 && rowIndex !== -1) {
+                        const cellIdx = rowIndex * 10 + colIndex;
+                        const owner = squares[cellIdx] ? `<strong>${squares[cellIdx]}</strong>` : '<em>Unclaimed Square</em>';
+                        winSummaries.push(`<strong>Q${q + 1}:</strong> ${owner} (Square #${cellIdx + 1} - ${nflTeams[homeIndex].mascot}: ${hVal}, ${nflTeams[awayIndex].mascot}: ${aVal})`);
+                    }
+                }
+            }
+
+            if (winSummaries.length > 0) {
+                showWinnerModal(winSummaries.join('<br><br>'));
+            }
+        }
+
+        function showWinnerModal(htmlText) {
+            document.getElementById('winnerModalText').innerHTML = htmlText;
+            document.getElementById('winnerModal').style.display = 'flex';
+        }
+
+        function showErrorModal(htmlText) {
+            document.getElementById('errorModalText').innerHTML = htmlText;
+            document.getElementById('errorModal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function getWinningSquares() {
+            const winners = {};
+
+            for (let q = 0; q < 4; q++) {
+                const hVal = quarterScores.home[q];
+                const aVal = quarterScores.away[q];
+
+                if (hVal !== '' && aVal !== '' && !isNaN(hVal) && !isNaN(aVal)) {
+                    const hDigit = parseInt(hVal.slice(-1), 10);
+                    const aDigit = parseInt(aVal.slice(-1), 10);
+
+                    const colIndex = topNumbers.indexOf(hDigit);
+                    const rowIndex = leftNumbers.indexOf(aDigit);
+
+                    if (colIndex !== -1 && rowIndex !== -1) {
+                        const cellIdx = rowIndex * 10 + colIndex;
+                        if (!winners[cellIdx]) winners[cellIdx] = [];
+                        winners[cellIdx].push(`Q${q + 1}`);
+                    }
+                }
+            }
+            return winners;
         }
 
         function randomizeNumbers() {
-            const nums1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => 0.5 - Math.random());
-            const nums2 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => 0.5 - Math.random());
+            if (isViewOnly) return;
+            topNumbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+            leftNumbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
 
-            roomRef.update({
-                topNumbers: nums1,
-                leftNumbers: nums2
-            });
+            localStorage.setItem('topNumbers', JSON.stringify(topNumbers));
+            localStorage.setItem('leftNumbers', JSON.stringify(leftNumbers));
+
+            renderBoard();
         }
 
-        function resetGrid() {
-            if (confirm("Are you sure you want to clear all square selections and reset numbers?")) {
-                initializeBoard();
+        function claimSquare(idx) {
+            if (isViewOnly) return;
+            const currentOwner = squares[idx] || '';
+            const newOwner = prompt(`Enter owner name for Square #${idx + 1}:`, currentOwner);
+
+            if (newOwner !== null) {
+                squares[idx] = newOwner.trim();
+                localStorage.setItem('footballSquaresData', JSON.stringify(squares));
+                renderBoard();
             }
         }
 
-        // -------------------------------------------------------------
-        // 5. UI RENDERER
-        // -------------------------------------------------------------
-        function renderBoard(data) {
-            const gridEl = document.getElementById('squares-grid');
-            gridEl.innerHTML = '';
+        function clearBoard() {
+            if (isViewOnly) return;
+            if (confirm("Are you sure you want to reset all squares, scores, and axis numbers?")) {
+                squares = Array(100).fill('');
+                topNumbers = Array(10).fill('?');
+                leftNumbers = Array(10).fill('?');
+                quarterScores = { home: ['', '', '', ''], away: ['', '', '', ''] };
+                lastAlertedWinners = ['', '', '', ''];
 
-            const topNums = data.topNumbers || Array(10).fill('?');
-            const leftNums = data.leftNumbers || Array(10).fill('?');
-            const gridData = data.grid || {};
+                localStorage.removeItem('footballSquaresData');
+                localStorage.removeItem('topNumbers');
+                localStorage.removeItem('leftNumbers');
+                localStorage.removeItem('quarterScores');
 
-            // Top-left corner blank cell
-            const corner = document.createElement('div');
-            corner.className = 'cell header';
-            corner.innerText = '';
-            gridEl.appendChild(corner);
+                loadSavedScores();
+                renderBoard();
+            }
+        }
 
-            // Render Top Team Header Numbers
-            topNums.forEach(num => {
-                const header = document.createElement('div');
-                header.className = 'cell number-header';
-                header.innerText = num;
-                gridEl.appendChild(header);
+        function shareViewOnlyLink() {
+            const payload = {
+                h: parseInt(homeIndex, 10),
+                a: parseInt(awayIndex, 10),
+                tn: topNumbers,
+                ln: leftNumbers,
+                s: squares,
+                q: quarterScores
+            };
+
+            const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+            const baseUrl = window.location.origin + window.location.pathname;
+            const shareUrl = `${baseUrl}?view=${encoded}`;
+
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert("View-Only Share Link copied to clipboard!");
+            }).catch(err => {
+                console.error("Failed to copy link: ", err);
+            });
+        }
+
+        function renderBoard() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+
+            const homeTeam = nflTeams[homeIndex];
+            const awayTeam = nflTeams[awayIndex];
+            const winningSquares = getWinningSquares();
+
+            // 1. Top Left Corner
+            const cornerCell = document.createElement('div');
+            cornerCell.className = 'cell corner';
+            cornerCell.innerText = 'NFL';
+            grid.appendChild(cornerCell);
+
+            // 2. Top Team Header
+            const topHeader = document.createElement('div');
+            topHeader.className = 'cell top-team-header';
+            topHeader.innerHTML = `<img class="header-logo" src="${homeTeam.logo}" alt="${homeTeam.name}"><span>${homeTeam.name}</span>`;
+            grid.appendChild(topHeader);
+
+            // 3. Top Number Axis
+            topNumbers.forEach(num => {
+                const cell = document.createElement('div');
+                cell.className = 'cell header-num';
+                cell.innerText = num;
+                grid.appendChild(cell);
             });
 
-            // Render 10 Rows
+            // 4. Side Team Header
+            const sideHeader = document.createElement('div');
+            sideHeader.className = 'cell side-team-header';
+            sideHeader.innerHTML = `<img class="header-logo" src="${awayTeam.logo}" alt="${awayTeam.name}"><span>${awayTeam.name}</span>`;
+            grid.appendChild(sideHeader);
+
+            // 5. Grid Rows
             for (let r = 0; r < 10; r++) {
-                // Left Team Header Number
-                const leftHeader = document.createElement('div');
-                leftHeader.className = 'cell number-header';
-                leftHeader.innerText = leftNums[r];
-                gridEl.appendChild(leftHeader);
+                // Side Axis Number
+                const leftNumCell = document.createElement('div');
+                leftNumCell.className = 'cell header-num';
+                leftNumCell.innerText = leftNumbers[r];
+                grid.appendChild(leftNumCell);
 
-                // 10 Interactive Grid Cells
+                // 10 Square Cells
                 for (let c = 0; c < 10; c++) {
-                    const cellKey = `${r}_${c}`;
-                    const cellData = gridData[cellKey] || { owner: '' };
+                    const idx = r * 10 + c;
+                    const squareCell = document.createElement('div');
+                    let className = 'cell square';
 
-                    const square = document.createElement('div');
-                    square.className = `cell square ${cellData.owner ? 'claimed' : ''}`;
-                    square.innerText = cellData.owner || '';
-                    square.onclick = () => claimSquare(r, c, cellData.owner);
+                    const ownerText = squares[idx] ? `<span class="square-owner">${squares[idx]}</span>` : '';
+                    if (squares[idx]) className += ' claimed';
 
-                    gridEl.appendChild(square);
+                    let winnerTagsHtml = '';
+                    if (winningSquares[idx]) {
+                        className += ' winner';
+                        winnerTagsHtml = `<div class="winner-tag">${winningSquares[idx].join(', ')}</div>`;
+                    }
+
+                    squareCell.className = className;
+                    squareCell.innerHTML = `${ownerText}${winnerTagsHtml}<span class="square-num">${idx + 1}</span>`;
+                    squareCell.onclick = () => claimSquare(idx);
+
+                    grid.appendChild(squareCell);
                 }
             }
         }
 
-        function copyInviteLink() {
-            navigator.clipboard.writeText(window.location.href);
-            alert("NFL Squares invite link copied!");
-        }
+        window.onload = () => {
+            initData();
+            populateSelects();
+            loadSavedScores();
+            updateTeams();
+
+            if (isViewOnly) {
+                evaluateAllQuarterWinnersForViewer();
+            }
+        };
     </script>
 </body>
 </html>
