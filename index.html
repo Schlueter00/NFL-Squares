@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NFL Football Squares</title>
+    <!-- Firebase App & Realtime Database CDN -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
     <style>
         :root {
-            --home-color: #203731; /* Green Bay Green default */
-            --away-color: #0b162a; /* Chicago Bears Navy default */
+            --home-color: #203731;
+            --away-color: #0b162a;
             --cell-size: 50px;
         }
 
@@ -26,7 +30,6 @@
             margin-bottom: 10px;
         }
 
-        /* View Only Banner */
         .view-only-banner {
             display: none;
             background-color: #e9ecef;
@@ -76,7 +79,6 @@
             cursor: pointer;
         }
 
-        /* Score Tracker Panel */
         .score-container {
             background: #fff;
             padding: 15px 20px;
@@ -139,13 +141,8 @@
             transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .score-input.home-score-input {
-            background-color: var(--home-color);
-        }
-
-        .score-input.away-score-input {
-            background-color: var(--away-color);
-        }
+        .score-input.home-score-input { background-color: var(--home-color); }
+        .score-input.away-score-input { background-color: var(--away-color); }
 
         .score-input:focus {
             outline: none;
@@ -154,15 +151,12 @@
             z-index: 2;
         }
 
-        /* Hide HTML5 Spinner Arrows */
         .score-input::-webkit-outer-spin-button,
         .score-input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-        .score-input[type=number] {
-            -moz-appearance: textfield;
-        }
+        .score-input[type=number] { -moz-appearance: textfield; }
 
         .controls {
             margin-bottom: 20px;
@@ -192,7 +186,6 @@
         button.danger { background-color: #a71d2a; }
         button.danger:hover { background-color: #76121b; }
 
-        /* Board Styling */
         .board-container {
             display: inline-block;
             background: #fff;
@@ -274,9 +267,7 @@
             flex-shrink: 0;
         }
 
-        .side-team-header .header-logo {
-            transform: rotate(90deg);
-        }
+        .side-team-header .header-logo { transform: rotate(90deg); }
 
         .cell.header-num {
             background-color: #e9ecef;
@@ -326,29 +317,19 @@
             line-height: 1;
         }
 
-        .cell.square.claimed .square-num {
-            color: #0f5132;
-            opacity: 0.65;
-        }
-
-        .cell.square.winner .square-num {
-            color: #ffffff !important;
-            opacity: 0.8;
-        }
+        .cell.square.claimed .square-num { color: #0f5132; opacity: 0.65; }
+        .cell.square.winner .square-num { color: #ffffff !important; opacity: 0.8; }
 
         .square-owner {
             word-break: break-word;
             padding-bottom: 2px;
         }
 
-        /* Modal Base */
         .modal-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.6);
             z-index: 1000;
             justify-content: center;
@@ -371,49 +352,16 @@
             to { transform: scale(1); opacity: 1; }
         }
 
-        .modal-content h2 {
-            margin-top: 0;
-            font-size: 22px;
-        }
-
+        .modal-content h2 { margin-top: 0; font-size: 22px; }
         .modal-content.winner-modal h2 { color: #28a745; }
         .modal-content.error-modal h2 { color: #dc3545; }
+        .modal-content p { font-size: 15px; color: #333; margin: 15px 0 20px 0; line-height: 1.5; }
+        .modal-content button { background-color: var(--home-color); color: white; padding: 8px 24px; font-size: 14px; border-radius: 6px; }
 
-        .modal-content p {
-            font-size: 15px;
-            color: #333;
-            margin: 15px 0 20px 0;
-            line-height: 1.5;
-        }
-
-        .modal-content button {
-            background-color: var(--home-color);
-            color: white;
-            padding: 8px 24px;
-            font-size: 14px;
-            border-radius: 6px;
-        }
-
-        body.view-only .edit-control {
-            display: none !important;
-        }
-
-        body.view-only .cell.square {
-            cursor: default;
-        }
-
-        body.view-only .cell.square:hover {
-            background-color: #fff;
-        }
-
-        body.view-only .cell.square.claimed:hover {
-            background-color: #d1e7dd;
-        }
-
-        body.view-only .score-input {
-            pointer-events: none;
-            opacity: 0.9;
-        }
+        body.view-only .edit-control { display: none !important; }
+        body.view-only .cell.square { cursor: default; }
+        body.view-only .cell.square:hover { background-color: #fff; }
+        body.view-only .cell.square.claimed:hover { background-color: #d1e7dd; }
 
         @media (max-width: 768px) {
             :root { --cell-size: 32px; }
@@ -428,57 +376,14 @@
         }
 
         @media print {
-            @page {
-                size: portrait;
-                margin: 0.5in;
-            }
-
-            body {
-                background-color: #fff !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                display: block !important;
-            }
-
-            h1, .view-only-banner, .team-select-container, .score-container, .controls, .modal-overlay {
-                display: none !important;
-            }
-
-            .board-container {
-                box-shadow: none !important;
-                padding: 0 !important;
-                margin: 0 auto !important;
-                display: flex !important;
-                justify-content: center !important;
-            }
-
-            :root {
-                --cell-size: 58px;
-            }
-
-            .grid-wrapper {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
-            .cell.top-team-header, .cell.side-team-header {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
-            .cell.square.claimed {
-                background-color: #e2e2e2 !important;
-                color: #000 !important;
-            }
-
-            .cell.square.winner {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
-            .square-num {
-                color: #555 !important;
-            }
+            @page { size: portrait; margin: 0.5in; }
+            body { background-color: #fff !important; padding: 0 !important; margin: 0 !important; display: block !important; }
+            h1, .view-only-banner, .team-select-container, .score-container, .controls, .modal-overlay { display: none !important; }
+            .board-container { box-shadow: none !important; padding: 0 !important; margin: 0 auto !important; display: flex !important; justify-content: center !important; }
+            :root { --cell-size: 58px; }
+            .grid-wrapper, .cell.top-team-header, .cell.side-team-header, .cell.square.winner { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .cell.square.claimed { background-color: #e2e2e2 !important; color: #000 !important; }
+            .square-num { color: #555 !important; }
         }
     </style>
 </head>
@@ -487,21 +392,20 @@
     <h1>NFL Football Squares Board</h1>
 
     <div class="view-only-banner" id="viewOnlyBanner">
-        🔒 You are viewing a shared, read-only version of this board.
+        🔒 You are viewing a live shared version of this board. Updates from the host will appear automatically!
     </div>
 
     <div class="team-select-container">
         <div class="select-group">
             <label for="homeSelect">Home Team (Top Axis)</label>
-            <select id="homeSelect" onchange="updateTeams()"></select>
+            <select id="homeSelect" onchange="onTeamSelectChange()"></select>
         </div>
         <div class="select-group">
             <label for="awaySelect">Away Team (Left Axis)</label>
-            <select id="awaySelect" onchange="updateTeams()"></select>
+            <select id="awaySelect" onchange="onTeamSelectChange()"></select>
         </div>
     </div>
 
-    <!-- Quarter Scores Input Panel -->
     <div class="score-container">
         <h3>Game Scores</h3>
         <div class="score-grid">
@@ -512,22 +416,22 @@
             <div class="score-grid-header">Q4</div>
 
             <div class="team-score-label" id="homeScoreLabel">Home</div>
-            <input type="number" id="home_q1" class="score-input home-score-input" min="0" onchange="saveAndEvaluateScores(0, 'home')">
-            <input type="number" id="home_q2" class="score-input home-score-input" min="0" onchange="saveAndEvaluateScores(1, 'home')">
-            <input type="number" id="home_q3" class="score-input home-score-input" min="0" onchange="saveAndEvaluateScores(2, 'home')">
-            <input type="number" id="home_q4" class="score-input home-score-input" min="0" onchange="saveAndEvaluateScores(3, 'home')">
+            <input type="number" id="home_q1" class="score-input home-score-input" min="0" onchange="handleScoreInput(0, 'home')">
+            <input type="number" id="home_q2" class="score-input home-score-input" min="0" onchange="handleScoreInput(1, 'home')">
+            <input type="number" id="home_q3" class="score-input home-score-input" min="0" onchange="handleScoreInput(2, 'home')">
+            <input type="number" id="home_q4" class="score-input home-score-input" min="0" onchange="handleScoreInput(3, 'home')">
 
             <div class="team-score-label" id="awayScoreLabel">Away</div>
-            <input type="number" id="away_q1" class="score-input away-score-input" min="0" onchange="saveAndEvaluateScores(0, 'away')">
-            <input type="number" id="away_q2" class="score-input away-score-input" min="0" onchange="saveAndEvaluateScores(1, 'away')">
-            <input type="number" id="away_q3" class="score-input away-score-input" min="0" onchange="saveAndEvaluateScores(2, 'away')">
-            <input type="number" id="away_q4" class="score-input away-score-input" min="0" onchange="saveAndEvaluateScores(3, 'away')">
+            <input type="number" id="away_q1" class="score-input away-score-input" min="0" onchange="handleScoreInput(0, 'away')">
+            <input type="number" id="away_q2" class="score-input away-score-input" min="0" onchange="handleScoreInput(1, 'away')">
+            <input type="number" id="away_q3" class="score-input away-score-input" min="0" onchange="handleScoreInput(2, 'away')">
+            <input type="number" id="away_q4" class="score-input away-score-input" min="0" onchange="handleScoreInput(3, 'away')">
         </div>
     </div>
 
     <div class="controls">
         <button class="edit-control" onclick="randomizeNumbers()">Generate Axis Numbers</button>
-        <button class="share-btn edit-control" onclick="shareViewOnlyLink()">Share Board</button>
+        <button class="share-btn" onclick="shareLiveLink()">Share Live Link</button>
         <button class="print-btn" onclick="window.print()">Print Board</button>
         <button class="danger edit-control" onclick="clearBoard()">Reset Board</button>
     </div>
@@ -555,6 +459,20 @@
     </div>
 
     <script>
+        // Configured with your Firebase credentials
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvnMAMvjEGvBJvY2hXdHEUHQ_TBzzYZ1w",
+            authDomain: "nfl-squares-86a8e.firebaseapp.com",
+            databaseURL: "https://nfl-squares-86a8e-default-rtdb.firebaseio.com",
+            projectId: "nfl-squares-86a8e",
+            storageBucket: "nfl-squares-86a8e.firebasestorage.app",
+            messagingSenderId: "471189380905",
+            appId: "1:471189380905:web:b7fb3141b698849d7e2138"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         const nflTeams = [
             { name: "Arizona Cardinals", mascot: "Cardinals", color: "#97233F", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/ari.png" },
             { name: "Atlanta Falcons", mascot: "Falcons", color: "#A71930", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/atl.png" },
@@ -590,200 +508,174 @@
             { name: "Washington Commanders", mascot: "Commanders", color: "#5A1414", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/wsh.png" }
         ];
 
+        let boardId = '';
         let isViewOnly = false;
-        let homeIndex = 11; // Green Bay Packers default
-        let awayIndex = 5;  // Chicago Bears default
-        let topNumbers = Array(10).fill('?');
-        let leftNumbers = Array(10).fill('?');
-        let squares = Array(100).fill('');
-        let quarterScores = {
-            home: ['', '', '', ''],
-            away: ['', '', '', '']
+        let boardData = {
+            homeIndex: 11,
+            awayIndex: 5,
+            topNumbers: Array(10).fill('?'),
+            leftNumbers: Array(10).fill('?'),
+            squares: Array(100).fill(''),
+            quarterScores: { home: ['', '', '', ''], away: ['', '', '', ''] }
         };
+
         let lastAlertedWinners = ['', '', '', ''];
 
-        function initData() {
+        function initApp() {
+            populateSelects();
             const urlParams = new URLSearchParams(window.location.search);
-            const viewData = urlParams.get('view');
+            boardId = urlParams.get('board');
 
-            if (viewData) {
-                try {
-                    const parsed = JSON.parse(decodeURIComponent(escape(atob(viewData))));
-                    homeIndex = parsed.h ?? 11;
-                    awayIndex = parsed.a ?? 5;
-                    topNumbers = parsed.tn || Array(10).fill('?');
-                    leftNumbers = parsed.ln || Array(10).fill('?');
-                    squares = parsed.s || Array(100).fill('');
-                    quarterScores = parsed.q || { home: ['', '', '', ''], away: ['', '', '', ''] };
-
-                    isViewOnly = true;
-                    document.body.classList.add('view-only');
-                    document.getElementById('viewOnlyBanner').style.display = 'block';
-                    document.getElementById('homeSelect').disabled = true;
-                    document.getElementById('awaySelect').disabled = true;
-                } catch (e) {
-                    console.error("Invalid shared link payload", e);
-                    loadLocalData();
-                }
+            if (!boardId) {
+                // Generate a new unique board ID for the host
+                boardId = 'board_' + Math.random().toString(36).substring(2, 9);
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?board=' + boardId;
+                window.history.replaceState({path: newUrl}, '', newUrl);
+                saveBoardToFirebase();
             } else {
-                loadLocalData();
+                // Viewer mode
+                isViewOnly = true;
+                document.body.classList.add('view-only');
+                document.getElementById('viewOnlyBanner').style.display = 'block';
+                document.getElementById('homeSelect').disabled = true;
+                document.getElementById('awaySelect').disabled = true;
             }
-        }
 
-        function loadLocalData() {
-            homeIndex = localStorage.getItem('homeTeamIdx') !== null ? parseInt(localStorage.getItem('homeTeamIdx')) : 11;
-            awayIndex = localStorage.getItem('awayTeamIdx') !== null ? parseInt(localStorage.getItem('awayTeamIdx')) : 5;
-            topNumbers = JSON.parse(localStorage.getItem('topNumbers')) || Array(10).fill('?');
-            leftNumbers = JSON.parse(localStorage.getItem('leftNumbers')) || Array(10).fill('?');
-            squares = JSON.parse(localStorage.getItem('footballSquaresData')) || Array(100).fill('');
-            quarterScores = JSON.parse(localStorage.getItem('quarterScores')) || {
-                home: ['', '', '', ''],
-                away: ['', '', '', '']
-            };
+            // Listen for live updates from Firebase
+            db.ref('boards/' + boardId).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    boardData = data;
+                    updateUIFromState();
+                }
+            });
         }
 
         function populateSelects() {
             const homeSelect = document.getElementById('homeSelect');
             const awaySelect = document.getElementById('awaySelect');
-
             nflTeams.forEach((team, idx) => {
-                const optH = new Option(team.name, idx);
-                const optA = new Option(team.name, idx);
-                homeSelect.add(optH);
-                awaySelect.add(optA);
+                homeSelect.add(new Option(team.name, idx));
+                awaySelect.add(new Option(team.name, idx));
             });
-
-            homeSelect.value = homeIndex;
-            awaySelect.value = awayIndex;
         }
 
-        function loadSavedScores() {
-            for (let q = 1; q <= 4; q++) {
-                document.getElementById(`home_q${q}`).value = quarterScores.home[q - 1] ?? '';
-                document.getElementById(`away_q${q}`).value = quarterScores.away[q - 1] ?? '';
-            }
-        }
+        function updateUIFromState() {
+            document.getElementById('homeSelect').value = boardData.homeIndex;
+            document.getElementById('awaySelect').value = boardData.awayIndex;
 
-        function updateTeams() {
-            homeIndex = document.getElementById('homeSelect').value;
-            awayIndex = document.getElementById('awaySelect').value;
-
-            if (!isViewOnly) {
-                localStorage.setItem('homeTeamIdx', homeIndex);
-                localStorage.setItem('awayTeamIdx', awayIndex);
-            }
-
-            const homeTeam = nflTeams[homeIndex];
-            const awayTeam = nflTeams[awayIndex];
+            const homeTeam = nflTeams[boardData.homeIndex];
+            const awayTeam = nflTeams[boardData.awayIndex];
 
             document.documentElement.style.setProperty('--home-color', homeTeam.color);
             document.documentElement.style.setProperty('--away-color', awayTeam.color);
-
             document.getElementById('homeScoreLabel').textContent = homeTeam.mascot;
             document.getElementById('awayScoreLabel').textContent = awayTeam.mascot;
 
+            for (let q = 1; q <= 4; q++) {
+                document.getElementById(`home_q${q}`).value = boardData.quarterScores.home[q - 1] ?? '';
+                document.getElementById(`away_q${q}`).value = boardData.quarterScores.away[q - 1] ?? '';
+            }
+
             renderBoard();
+
+            // Check quarter winners for popup triggers
+            for (let q = 0; q < 4; q++) {
+                checkAndPopupQuarterWinner(q);
+            }
         }
 
-        function saveAndEvaluateScores(qIdx, teamSide) {
-            if (isViewOnly) return;
+        function saveBoardToFirebase() {
+            db.ref('boards/' + boardId).set(boardData);
+        }
 
+        function onTeamSelectChange() {
+            if (isViewOnly) return;
+            boardData.homeIndex = document.getElementById('homeSelect').value;
+            boardData.awayIndex = document.getElementById('awaySelect').value;
+            saveBoardToFirebase();
+        }
+
+        function handleScoreInput(qIdx, teamSide) {
+            if (isViewOnly) return;
             const inputId = `${teamSide}_q${qIdx + 1}`;
             const inputVal = document.getElementById(inputId).value.trim();
-            const mascotName = teamSide === 'home' ? nflTeams[homeIndex].mascot : nflTeams[awayIndex].mascot;
+            const mascotName = teamSide === 'home' ? nflTeams[boardData.homeIndex].mascot : nflTeams[boardData.awayIndex].mascot;
 
             if (inputVal !== '' && !isNaN(inputVal)) {
                 const currentScore = parseInt(inputVal, 10);
-
                 if (qIdx > 0) {
-                    const prevVal = quarterScores[teamSide][qIdx - 1];
-                    if (prevVal !== '' && !isNaN(prevVal)) {
-                        const prevScore = parseInt(prevVal, 10);
-                        if (currentScore < prevScore) {
-                            showErrorModal(`<strong>${mascotName}</strong> cannot have a Q${qIdx + 1} score of <strong>${currentScore}</strong> because their Q${qIdx} score was <strong>${prevScore}</strong>.<br><br>Cumulative game scores cannot decrease!`);
-                            document.getElementById(inputId).value = quarterScores[teamSide][qIdx] || '';
-                            return;
-                        }
-                    }
-                }
-
-                if (qIdx < 3) {
-                    const nextVal = quarterScores[teamSide][qIdx + 1];
-                    if (nextVal !== '' && !isNaN(nextVal)) {
-                        const nextScore = parseInt(nextVal, 10);
-                        if (currentScore > nextScore) {
-                            showErrorModal(`<strong>${mascotName}</strong> cannot have a Q${qIdx + 1} score of <strong>${currentScore}</strong> because their Q${qIdx + 2} score is recorded as <strong>${nextScore}</strong>.<br><br>Cumulative game scores cannot decrease!`);
-                            document.getElementById(inputId).value = quarterScores[teamSide][qIdx] || '';
-                            return;
-                        }
+                    const prevVal = boardData.quarterScores[teamSide][qIdx - 1];
+                    if (prevVal !== '' && !isNaN(prevVal) && currentScore < parseInt(prevVal, 10)) {
+                        showErrorModal(`<strong>${mascotName}</strong> cannot decrease from Q${qIdx} score.`);
+                        document.getElementById(inputId).value = boardData.quarterScores[teamSide][qIdx] || '';
+                        return;
                     }
                 }
             }
 
             for (let q = 0; q < 4; q++) {
-                quarterScores.home[q] = document.getElementById(`home_q${q + 1}`).value.trim();
-                quarterScores.away[q] = document.getElementById(`away_q${q + 1}`).value.trim();
+                boardData.quarterScores.home[q] = document.getElementById(`home_q${q + 1}`).value.trim();
+                boardData.quarterScores.away[q] = document.getElementById(`away_q${q + 1}`).value.trim();
             }
-            localStorage.setItem('quarterScores', JSON.stringify(quarterScores));
-            
-            renderBoard();
 
-            if (qIdx !== undefined) {
-                checkAndPopupQuarterWinner(qIdx);
+            saveBoardToFirebase();
+        }
+
+        function randomizeNumbers() {
+            if (isViewOnly) return;
+            let nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            for (let i = nums.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [nums[i], nums[j]] = [nums[j], nums[i]];
+            }
+            boardData.topNumbers = [...nums];
+            for (let i = nums.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [nums[i], nums[j]] = [nums[j], nums[i]];
+            }
+            boardData.leftNumbers = [...nums];
+            saveBoardToFirebase();
+        }
+
+        function clearBoard() {
+            if (isViewOnly) return;
+            if (confirm("Are you sure you want to reset the entire board?")) {
+                boardData.topNumbers = Array(10).fill('?');
+                boardData.leftNumbers = Array(10).fill('?');
+                boardData.squares = Array(100).fill('');
+                boardData.quarterScores = { home: ['', '', '', ''], away: ['', '', '', ''] };
+                saveBoardToFirebase();
             }
         }
 
+        function shareLiveLink() {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Live board link copied to clipboard! Anyone you share this with will see updates in real-time.");
+        }
+
         function checkAndPopupQuarterWinner(qIdx) {
-            const hVal = quarterScores.home[qIdx];
-            const aVal = quarterScores.away[qIdx];
+            const hVal = boardData.quarterScores.home[qIdx];
+            const aVal = boardData.quarterScores.away[qIdx];
 
             if (hVal !== '' && aVal !== '' && !isNaN(hVal) && !isNaN(aVal)) {
                 const hDigit = parseInt(hVal.slice(-1), 10);
                 const aDigit = parseInt(aVal.slice(-1), 10);
-
-                const colIndex = topNumbers.indexOf(hDigit);
-                const rowIndex = leftNumbers.indexOf(aDigit);
+                const colIndex = boardData.topNumbers.indexOf(hDigit);
+                const rowIndex = boardData.leftNumbers.indexOf(aDigit);
 
                 if (colIndex !== -1 && rowIndex !== -1) {
                     const cellIdx = rowIndex * 10 + colIndex;
-                    const owner = squares[cellIdx] ? `<strong>${squares[cellIdx]}</strong>` : '<em>Unclaimed Square</em>';
+                    const owner = boardData.squares[cellIdx] ? `<strong>${boardData.squares[cellIdx]}</strong>` : '<em>Unclaimed Square</em>';
                     const scoreKey = `${hVal}-${aVal}-${owner}`;
 
                     if (lastAlertedWinners[qIdx] !== scoreKey) {
                         lastAlertedWinners[qIdx] = scoreKey;
-                        showWinnerModal(`<strong>Q${qIdx + 1} Winner:</strong><br>${owner}<br>Square #${cellIdx + 1} (${nflTeams[homeIndex].mascot}: ${hVal}, ${nflTeams[awayIndex].mascot}: ${aVal})`);
+                        showWinnerModal(`<strong>Q${qIdx + 1} Winner:</strong><br>${owner}<br>Square #${cellIdx + 1} (${nflTeams[boardData.homeIndex].mascot}: ${hVal}, ${nflTeams[boardData.awayIndex].mascot}: ${aVal})`);
                     }
                 }
             } else {
                 lastAlertedWinners[qIdx] = '';
-            }
-        }
-
-        // Trigger popups for viewers opening a shared link
-        function evaluateAllQuarterWinnersForViewer() {
-            let winSummaries = [];
-
-            for (let q = 0; q < 4; q++) {
-                const hVal = quarterScores.home[q];
-                const aVal = quarterScores.away[q];
-
-                if (hVal !== '' && aVal !== '' && !isNaN(hVal) && !isNaN(aVal)) {
-                    const hDigit = parseInt(hVal.slice(-1), 10);
-                    const aDigit = parseInt(aVal.slice(-1), 10);
-
-                    const colIndex = topNumbers.indexOf(hDigit);
-                    const rowIndex = leftNumbers.indexOf(aDigit);
-
-                    if (colIndex !== -1 && rowIndex !== -1) {
-                        const cellIdx = rowIndex * 10 + colIndex;
-                        const owner = squares[cellIdx] ? `<strong>${squares[cellIdx]}</strong>` : '<em>Unclaimed Square</em>';
-                        winSummaries.push(`<strong>Q${q + 1}:</strong> ${owner} (Square #${cellIdx + 1} - ${nflTeams[homeIndex].mascot}: ${hVal}, ${nflTeams[awayIndex].mascot}: ${aVal})`);
-                    }
-                }
-            }
-
-            if (winSummaries.length > 0) {
-                showWinnerModal(winSummaries.join('<br><br>'));
             }
         }
 
@@ -803,18 +695,14 @@
 
         function getWinningSquares() {
             const winners = {};
-
             for (let q = 0; q < 4; q++) {
-                const hVal = quarterScores.home[q];
-                const aVal = quarterScores.away[q];
-
+                const hVal = boardData.quarterScores.home[q];
+                const aVal = boardData.quarterScores.away[q];
                 if (hVal !== '' && aVal !== '' && !isNaN(hVal) && !isNaN(aVal)) {
                     const hDigit = parseInt(hVal.slice(-1), 10);
                     const aDigit = parseInt(aVal.slice(-1), 10);
-
-                    const colIndex = topNumbers.indexOf(hDigit);
-                    const rowIndex = leftNumbers.indexOf(aDigit);
-
+                    const colIndex = boardData.topNumbers.indexOf(hDigit);
+                    const rowIndex = boardData.leftNumbers.indexOf(aDigit);
                     if (colIndex !== -1 && rowIndex !== -1) {
                         const cellIdx = rowIndex * 10 + colIndex;
                         if (!winners[cellIdx]) winners[cellIdx] = [];
@@ -829,181 +717,82 @@
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
 
-            const homeTeam = nflTeams[homeIndex];
-            const awayTeam = nflTeams[awayIndex];
-            const winnersMap = getWinningSquares();
+            const homeTeam = nflTeams[boardData.homeIndex];
+            const awayTeam = nflTeams[boardData.awayIndex];
+            const winningSquares = getWinningSquares();
 
-            // 1. Top-Left Corner
+            // Corner Header
             const corner = document.createElement('div');
             corner.className = 'cell corner';
-            corner.textContent = 'Squares';
+            corner.innerHTML = `${awayTeam.mascot} / ${homeTeam.mascot}`;
             grid.appendChild(corner);
 
-            // 2. Home Team Header
+            // Top Team Header
             const topHeader = document.createElement('div');
             topHeader.className = 'cell top-team-header';
-            
-            const homeLogo = document.createElement('img');
-            homeLogo.src = homeTeam.logo;
-            homeLogo.alt = homeTeam.name;
-            homeLogo.className = 'header-logo';
-
-            const homeText = document.createElement('span');
-            homeText.textContent = `${homeTeam.name} (Home)`;
-
-            topHeader.appendChild(homeLogo);
-            topHeader.appendChild(homeText);
+            topHeader.innerHTML = `<img src="${homeTeam.logo}" class="header-logo" alt=""> ${homeTeam.name}`;
             grid.appendChild(topHeader);
 
-            // 3. Away Team Header
+            // Side Team Header
             const sideHeader = document.createElement('div');
             sideHeader.className = 'cell side-team-header';
-
-            const awayLogo = document.createElement('img');
-            awayLogo.src = awayTeam.logo;
-            awayLogo.alt = awayTeam.name;
-            awayLogo.className = 'header-logo';
-
-            const awayText = document.createElement('span');
-            awayText.textContent = `${awayTeam.name} (Away)`;
-
-            sideHeader.appendChild(awayLogo);
-            sideHeader.appendChild(awayText);
+            sideHeader.innerHTML = `<img src="${awayTeam.logo}" class="header-logo" alt=""> ${awayTeam.name}`;
             grid.appendChild(sideHeader);
 
-            // 4. Top Numbers Row
-            for (let col = 0; col < 10; col++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell header-num';
-                cell.style.gridRow = '2';
-                cell.style.gridColumn = `${col + 3}`;
-                cell.textContent = topNumbers[col];
-                grid.appendChild(cell);
+            // Top Axis Numbers (Row 2, Cols 3-12)
+            for (let c = 0; c < 10; c++) {
+                const numCell = document.createElement('div');
+                numCell.className = 'cell header-num';
+                numCell.textContent = boardData.topNumbers[c];
+                grid.appendChild(numCell);
             }
 
-            // 5. Side Numbers + Grid
-            for (let row = 0; row < 10; row++) {
-                const sideNumCell = document.createElement('div');
-                sideNumCell.className = 'cell header-num';
-                sideNumCell.style.gridRow = `${row + 3}`;
-                sideNumCell.style.gridColumn = '2';
-                sideNumCell.textContent = leftNumbers[row];
-                grid.appendChild(sideNumCell);
+            // Grid Rows (0 to 9)
+            for (let r = 0; r < 10; r++) {
+                // Left Axis Number cell
+                const leftNumCell = document.createElement('div');
+                leftNumCell.className = 'cell header-num';
+                leftNumCell.textContent = boardData.leftNumbers[r];
+                grid.appendChild(leftNumCell);
 
-                for (let col = 0; col < 10; col++) {
-                    const index = row * 10 + col;
-                    const square = document.createElement('div');
-                    square.className = 'cell square';
-                    square.style.gridRow = `${row + 3}`;
-                    square.style.gridColumn = `${col + 3}`;
-                    
-                    if (squares[index]) {
-                        square.classList.add('claimed');
-                        const ownerSpan = document.createElement('span');
-                        ownerSpan.className = 'square-owner';
-                        ownerSpan.textContent = squares[index];
-                        square.appendChild(ownerSpan);
+                // 10 Square cells per row
+                for (let c = 0; c < 10; c++) {
+                    const idx = r * 10 + c;
+                    const cell = document.createElement('div');
+                    const owner = boardData.squares[idx];
+                    const isWinner = winningSquares[idx];
+
+                    let cellClass = 'cell square';
+                    if (owner) cellClass += ' claimed';
+                    if (isWinner) cellClass += ' winner';
+                    cell.className = cellClass;
+
+                    let contentHtml = `<span class="square-num">#${idx + 1}</span>`;
+                    if (owner) {
+                        contentHtml += `<span class="square-owner">${owner}</span>`;
                     }
-
-                    if (winnersMap[index]) {
-                        square.classList.add('winner');
-                        const tag = document.createElement('div');
-                        tag.className = 'winner-tag';
-                        tag.textContent = winnersMap[index].join(', ') + ' Win';
-                        square.appendChild(tag);
+                    if (isWinner) {
+                        contentHtml += `<div class="winner-tag">${isWinner.join(', ')}</div>`;
                     }
-
-                    const numSpan = document.createElement('span');
-                    numSpan.className = 'square-num';
-                    numSpan.textContent = index + 1;
-                    square.appendChild(numSpan);
+                    cell.innerHTML = contentHtml;
 
                     if (!isViewOnly) {
-                        square.onclick = () => claimSquare(index);
+                        cell.onclick = () => {
+                            const current = boardData.squares[idx] || '';
+                            const name = prompt(`Enter name for Square #${idx + 1}:`, current);
+                            if (name !== null) {
+                                boardData.squares[idx] = name.trim();
+                                saveBoardToFirebase();
+                            }
+                        };
                     }
 
-                    grid.appendChild(square);
+                    grid.appendChild(cell);
                 }
             }
         }
 
-        function claimSquare(index) {
-            if (isViewOnly) return;
-
-            const currentOwner = squares[index] || '';
-            const newOwner = prompt(`Enter initials or name for square #${index + 1}:`, currentOwner);
-
-            if (newOwner !== null) {
-                squares[index] = newOwner.trim();
-                localStorage.setItem('footballSquaresData', JSON.stringify(squares));
-                renderBoard();
-            }
-        }
-
-        function randomizeNumbers() {
-            if (isViewOnly) return;
-            if (!confirm('Are you sure you want to randomize the numbers?')) return;
-
-            const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
-            const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-
-            topNumbers = shuffle(digits);
-            leftNumbers = shuffle(digits);
-
-            localStorage.setItem('topNumbers', JSON.stringify(topNumbers));
-            localStorage.setItem('leftNumbers', JSON.stringify(leftNumbers));
-
-            renderBoard();
-        }
-
-        function clearBoard() {
-            if (isViewOnly) return;
-            if (confirm('Reset entire board? All names, numbers, and score entries will be wiped.')) {
-                squares = Array(100).fill('');
-                topNumbers = Array(10).fill('?');
-                leftNumbers = Array(10).fill('?');
-                quarterScores = { home: ['', '', '', ''], away: ['', '', '', ''] };
-                lastAlertedWinners = ['', '', '', ''];
-                localStorage.clear();
-                loadSavedScores();
-                renderBoard();
-            }
-        }
-
-        function shareViewOnlyLink() {
-            const payload = {
-                h: homeIndex,
-                a: awayIndex,
-                tn: topNumbers,
-                ln: leftNumbers,
-                s: squares,
-                q: quarterScores
-            };
-
-            const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-            const shareUrl = `${window.location.origin}${window.location.pathname}?view=${encoded}`;
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(shareUrl).then(() => {
-                    alert('Updated share link copied to clipboard!');
-                }).catch(() => {
-                    prompt('Copy this updated share link:', shareUrl);
-                });
-            } else {
-                prompt('Copy this updated share link:', shareUrl);
-            }
-        }
-
-        // Init Sequence
-        initData();
-        populateSelects();
-        loadSavedScores();
-        updateTeams();
-
-        // If viewed via shared link, automatically pop up winners on load
-        if (isViewOnly) {
-            evaluateAllQuarterWinnersForViewer();
-        }
+        window.onload = initApp;
     </script>
 </body>
 </html>
