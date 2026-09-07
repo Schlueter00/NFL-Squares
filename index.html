@@ -8,7 +8,7 @@
     <!-- Firebase SDK Modular Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDp0h2e8jAiiEeRoYSfr0y7ORHoZ5xujHM",
@@ -20,26 +20,22 @@
             appId: "1:1057153529322:web:9475a82e7ab1d2e0702e93"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const boardRef = ref(db, 'boardData');
 
-        // Expose Firebase functions globally for the application
         window.fbDatabase = db;
         window.fbBoardRef = boardRef;
         window.fbSet = set;
-        window.fbUpdate = update;
         window.fbOnValue = onValue;
 
-        // Signal that Firebase is ready
         window.dispatchEvent(new Event('firebase-ready'));
     </script>
 
     <style>
         :root {
-            --home-color: #203731; /* Green Bay Green default */
-            --away-color: #0b162a; /* Chicago Bears Navy default */
+            --home-color: #203731;
+            --away-color: #0b162a;
             --cell-size: 50px;
         }
 
@@ -55,10 +51,9 @@
 
         h1 {
             color: #1a1a1a;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
-        /* Realtime Connection Status Badge */
         .sync-status {
             background-color: #e2e3e5;
             color: #383d41;
@@ -79,8 +74,17 @@
             background-color: #ffc107;
         }
 
-        .status-dot.online {
-            background-color: #28a745;
+        .status-dot.online { background-color: #28a745; }
+
+        .view-banner {
+            display: none;
+            background-color: #0d6efd;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 15px;
         }
 
         .team-select-container {
@@ -119,7 +123,6 @@
             cursor: pointer;
         }
 
-        /* Score Tracker Panel */
         .score-container {
             background: #fff;
             padding: 15px 20px;
@@ -179,33 +182,17 @@
             font-weight: bold;
             box-sizing: border-box;
             color: #ffffff;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .score-input.home-score-input {
-            background-color: var(--home-color);
-        }
+        .score-input.home-score-input { background-color: var(--home-color); }
+        .score-input.away-score-input { background-color: var(--away-color); }
 
-        .score-input.away-score-input {
-            background-color: var(--away-color);
-        }
-
-        .score-input:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #333333;
-            transform: scale(1.05);
-            z-index: 2;
-        }
-
-        /* Hide HTML5 Spinner Arrows */
         .score-input::-webkit-outer-spin-button,
         .score-input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-        .score-input[type=number] {
-            -moz-appearance: textfield;
-        }
+        .score-input[type=number] { -moz-appearance: textfield; }
 
         .controls {
             margin-bottom: 20px;
@@ -228,12 +215,13 @@
         }
 
         button:hover { background-color: #555; }
+        button.share-btn { background-color: #198754; }
+        button.share-btn:hover { background-color: #146c43; }
         button.print-btn { background-color: #0076B6; }
         button.print-btn:hover { background-color: #005a8c; }
         button.danger { background-color: #a71d2a; }
         button.danger:hover { background-color: #76121b; }
 
-        /* Board Styling */
         .board-container {
             display: inline-block;
             background: #fff;
@@ -315,9 +303,7 @@
             flex-shrink: 0;
         }
 
-        .side-team-header .header-logo {
-            transform: rotate(90deg);
-        }
+        .side-team-header .header-logo { transform: rotate(90deg); }
 
         .cell.header-num {
             background-color: #e9ecef;
@@ -367,22 +353,11 @@
             line-height: 1;
         }
 
-        .cell.square.claimed .square-num {
-            color: #0f5132;
-            opacity: 0.65;
-        }
+        .cell.square.claimed .square-num { color: #0f5132; opacity: 0.65; }
+        .cell.square.winner .square-num { color: #ffffff !important; opacity: 0.8; }
 
-        .cell.square.winner .square-num {
-            color: #ffffff !important;
-            opacity: 0.8;
-        }
+        .square-owner { word-break: break-word; padding-bottom: 2px; }
 
-        .square-owner {
-            word-break: break-word;
-            padding-bottom: 2px;
-        }
-
-        /* Modal Base */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -412,11 +387,7 @@
             to { transform: scale(1); opacity: 1; }
         }
 
-        .modal-content h2 {
-            margin-top: 0;
-            font-size: 22px;
-        }
-
+        .modal-content h2 { margin-top: 0; font-size: 22px; }
         .modal-content.winner-modal h2 { color: #28a745; }
         .modal-content.error-modal h2 { color: #dc3545; }
 
@@ -448,57 +419,16 @@
         }
 
         @media print {
-            @page {
-                size: portrait;
-                margin: 0.5in;
-            }
-
-            body {
-                background-color: #fff !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                display: block !important;
-            }
-
-            h1, .sync-status, .team-select-container, .score-container, .controls, .modal-overlay {
-                display: none !important;
-            }
-
-            .board-container {
-                box-shadow: none !important;
-                padding: 0 !important;
-                margin: 0 auto !important;
-                display: flex !important;
-                justify-content: center !important;
-            }
-
-            :root {
-                --cell-size: 58px;
-            }
-
-            .grid-wrapper {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
-            .cell.top-team-header, .cell.side-team-header {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
-            .cell.square.claimed {
-                background-color: #e2e2e2 !important;
-                color: #000 !important;
-            }
-
-            .cell.square.winner {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
-            .square-num {
-                color: #555 !important;
-            }
+            @page { size: portrait; margin: 0.5in; }
+            body { background-color: #fff !important; padding: 0 !important; margin: 0 !important; display: block !important; }
+            h1, .sync-status, .view-banner, .team-select-container, .score-container, .controls, .modal-overlay { display: none !important; }
+            .board-container { box-shadow: none !important; padding: 0 !important; margin: 0 auto !important; display: flex !important; justify-content: center !important; }
+            :root { --cell-size: 58px; }
+            .grid-wrapper { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .cell.top-team-header, .cell.side-team-header { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .cell.square.claimed { background-color: #e2e2e2 !important; color: #000 !important; }
+            .cell.square.winner { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .square-num { color: #555 !important; }
         }
     </style>
 </head>
@@ -509,6 +439,10 @@
     <div class="sync-status">
         <div class="status-dot" id="statusDot"></div>
         <span id="statusText">Connecting to Firebase...</span>
+    </div>
+
+    <div class="view-banner" id="viewBanner">
+        👁️ View-Only Mode — Board updates automatically in real-time.
     </div>
 
     <div class="team-select-container">
@@ -522,7 +456,6 @@
         </div>
     </div>
 
-    <!-- Quarter Scores Input Panel -->
     <div class="score-container">
         <h3>Game Scores</h3>
         <div class="score-grid">
@@ -546,7 +479,8 @@
         </div>
     </div>
 
-    <div class="controls">
+    <div class="controls" id="adminControls">
+        <button class="share-btn" onclick="copyShareableLink()">🔗 Share Board Link</button>
         <button onclick="randomizeNumbers()">Generate Axis Numbers</button>
         <button class="print-btn" onclick="window.print()">Print Board</button>
         <button class="danger" onclick="clearBoard()">Reset Board</button>
@@ -556,7 +490,6 @@
         <div class="grid-wrapper" id="grid"></div>
     </div>
 
-    <!-- Winner Modal Popup -->
     <div class="modal-overlay" id="winnerModal">
         <div class="modal-content winner-modal">
             <h2>🎉 Winner Announced!</h2>
@@ -565,7 +498,6 @@
         </div>
     </div>
 
-    <!-- Score Error Modal Popup -->
     <div class="modal-overlay" id="errorModal">
         <div class="modal-content error-modal">
             <h2>⚠️ Invalid Score Entry</h2>
@@ -610,10 +542,11 @@
             { name: "Washington Commanders", mascot: "Commanders", color: "#5A1414", logo: "https://a.espncdn.com/i/teamlogos/nfl/500/wsh.png" }
         ];
 
-        // Default local state
+        let isViewOnly = false;
+
         let state = {
-            homeIndex: 11, // Packers
-            awayIndex: 5,  // Bears
+            homeIndex: 11,
+            awayIndex: 5,
             topNumbers: Array(10).fill('?'),
             leftNumbers: Array(10).fill('?'),
             squares: Array(100).fill(''),
@@ -624,6 +557,36 @@
         };
 
         let lastAlertedWinners = ['', '', '', ''];
+
+        function checkViewMode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            isViewOnly = urlParams.get('mode') === 'view';
+
+            if (isViewOnly) {
+                document.getElementById('viewBanner').style.display = 'block';
+                document.getElementById('homeSelect').disabled = true;
+                document.getElementById('awaySelect').disabled = true;
+
+                document.querySelectorAll('.score-input').forEach(input => {
+                    input.readOnly = true;
+                });
+
+                document.getElementById('adminControls').innerHTML = `
+                    <button class="print-btn" onclick="window.print()">Print Board</button>
+                `;
+            }
+        }
+
+        function copyShareableLink() {
+            const baseUrl = window.location.href.split('?')[0];
+            const shareUrl = `${baseUrl}?mode=view`;
+
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert("Shareable View-Only Link copied to clipboard!\n\nUsers opening this link can view updates live without editing the board.");
+            }).catch(err => {
+                prompt("Copy this View-Only Link:", shareUrl);
+            });
+        }
 
         function populateSelects() {
             const homeSelect = document.getElementById('homeSelect');
@@ -663,6 +626,7 @@
         }
 
         function updateTeams() {
+            if (isViewOnly) return;
             state.homeIndex = parseInt(document.getElementById('homeSelect').value, 10);
             state.awayIndex = parseInt(document.getElementById('awaySelect').value, 10);
 
@@ -670,6 +634,7 @@
         }
 
         function saveAndEvaluateScores(qIdx, teamSide) {
+            if (isViewOnly) return;
             const inputId = `${teamSide}_q${qIdx + 1}`;
             const inputVal = document.getElementById(inputId).value.trim();
             const mascotName = teamSide === 'home' ? nflTeams[state.homeIndex].mascot : nflTeams[state.awayIndex].mascot;
@@ -786,19 +751,16 @@
             const homeTeam = nflTeams[state.homeIndex];
             const awayTeam = nflTeams[state.awayIndex];
 
-            // Corner Cell
             const cornerCell = document.createElement('div');
             cornerCell.className = 'cell corner';
             cornerCell.innerText = 'NFL SQUARES';
             grid.appendChild(cornerCell);
 
-            // Top Team Header (Home)
             const topHeaderCell = document.createElement('div');
             topHeaderCell.className = 'cell top-team-header';
             topHeaderCell.innerHTML = `<img src="${homeTeam.logo}" class="header-logo" alt=""> ${homeTeam.name}`;
             grid.appendChild(topHeaderCell);
 
-            // Top Axis Numbers
             for (let i = 0; i < 10; i++) {
                 const numCell = document.createElement('div');
                 numCell.className = 'cell header-num';
@@ -806,7 +768,6 @@
                 grid.appendChild(numCell);
             }
 
-            // Side Team Header (Away)
             const sideHeaderCell = document.createElement('div');
             sideHeaderCell.className = 'cell side-team-header';
             sideHeaderCell.innerHTML = `<img src="${awayTeam.logo}" class="header-logo" alt=""> ${awayTeam.name}`;
@@ -814,7 +775,6 @@
 
             const winningSquares = getWinningSquares();
 
-            // 10x10 Grid Rows
             for (let r = 0; r < 10; r++) {
                 const leftNumCell = document.createElement('div');
                 leftNumCell.className = 'cell header-num';
@@ -827,13 +787,8 @@
                     squareCell.className = 'cell square';
 
                     const ownerName = state.squares[squareIdx];
-                    if (ownerName) {
-                        squareCell.classList.add('claimed');
-                    }
-
-                    if (winningSquares[squareIdx]) {
-                        squareCell.classList.add('winner');
-                    }
+                    if (ownerName) squareCell.classList.add('claimed');
+                    if (winningSquares[squareIdx]) squareCell.classList.add('winner');
 
                     let contentHtml = `<div class="square-owner">${ownerName ? escapeHtml(ownerName) : ''}</div>`;
                     if (winningSquares[squareIdx]) {
@@ -842,7 +797,12 @@
                     contentHtml += `<div class="square-num">${squareIdx + 1}</div>`;
 
                     squareCell.innerHTML = contentHtml;
-                    squareCell.onclick = () => claimSquare(squareIdx);
+                    
+                    if (!isViewOnly) {
+                        squareCell.onclick = () => claimSquare(squareIdx);
+                    } else {
+                        squareCell.style.cursor = 'default';
+                    }
 
                     grid.appendChild(squareCell);
                 }
@@ -850,6 +810,7 @@
         }
 
         function claimSquare(idx) {
+            if (isViewOnly) return;
             const currentOwner = state.squares[idx] || '';
             const newOwner = prompt(`Enter name for Square #${idx + 1}:`, currentOwner);
 
@@ -860,6 +821,7 @@
         }
 
         function randomizeNumbers() {
+            if (isViewOnly) return;
             if (!confirm("Are you sure you want to generate new random numbers for the top and left axes?")) return;
 
             const shuffle = (array) => {
@@ -879,6 +841,7 @@
         }
 
         function clearBoard() {
+            if (isViewOnly) return;
             if (confirm("Are you sure you want to clear all names, scores, and axis numbers?")) {
                 state = {
                     homeIndex: state.homeIndex,
@@ -894,6 +857,7 @@
         }
 
         function pushStateToFirebase() {
+            if (isViewOnly) return;
             if (window.fbBoardRef && window.fbSet) {
                 window.fbSet(window.fbBoardRef, state)
                     .catch((err) => console.error("Firebase update failed:", err));
@@ -914,8 +878,7 @@
                     state.leftNumbers = data.leftNumbers || Array(10).fill('?');
                     state.squares = data.squares || Array(100).fill('');
                     state.quarterScores = data.quarterScores || { home: ['', '', '', ''], away: ['', '', '', ''] };
-                } else {
-                    // Seed initial state into DB if empty
+                } else if (!isViewOnly) {
                     pushStateToFirebase();
                 }
 
@@ -932,11 +895,13 @@
         }
 
         window.addEventListener('firebase-ready', () => {
+            checkViewMode();
             populateSelects();
             setupFirebaseListener();
         });
 
         window.onload = () => {
+            checkViewMode();
             populateSelects();
         };
     </script>
