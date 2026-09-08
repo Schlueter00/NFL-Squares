@@ -539,6 +539,18 @@
                 document.getElementById('viewOnlyBanner').style.display = 'block';
                 document.getElementById('homeSelect').disabled = true;
                 document.getElementById('awaySelect').disabled = true;
+
+                // Lock down all score inputs for viewers
+                const allScoreInputs = document.querySelectorAll('.score-input');
+                allScoreInputs.forEach(input => {
+                    input.disabled = true;
+                });
+
+                // Hide host-only buttons for viewers
+                const shareBtn = document.querySelector('button.share-btn');
+                const printBtn = document.querySelector('button.print-btn');
+                if (shareBtn) shareBtn.style.display = 'none';
+                if (printBtn) printBtn.style.display = 'none';
             }
 
             // Listen for live updates from Firebase
@@ -767,31 +779,31 @@
                     if (isWinner) cellClass += ' winner';
                     cell.className = cellClass;
 
-                    let contentHtml = `<span class="square-num">#${idx + 1}</span>`;
+                    let contentHtml = `<span class="square-num">${idx + 1}</span>`;
                     if (owner) {
                         contentHtml += `<span class="square-owner">${owner}</span>`;
                     }
                     if (isWinner) {
-                        contentHtml += `<div class="winner-tag">${isWinner.join(', ')}</div>`;
+                        contentHtml += `<span class="winner-tag">${isWinner.join(', ')}</span>`;
                     }
                     cell.innerHTML = contentHtml;
 
                     if (!isViewOnly) {
                         cell.onclick = () => {
-                            const current = boardData.squares[idx] || '';
-                            const name = prompt(`Enter name for Square #${idx + 1}:`, current);
-                            if (name !== null) {
-                                boardData.squares[idx] = name.trim();
+                            const currentOwner = boardData.squares[idx] || '';
+                            const newOwner = prompt(`Enter name for Square #${idx + 1}:`, currentOwner);
+                            if (newOwner !== null) {
+                                boardData.squares[idx] = newOwner.trim();
                                 saveBoardToFirebase();
                             }
                         };
                     }
-
                     grid.appendChild(cell);
                 }
             }
         }
 
+        // Initialize app on load
         window.onload = initApp;
     </script>
 </body>
