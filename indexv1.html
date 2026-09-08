@@ -79,33 +79,22 @@
             cursor: pointer;
         }
 
-        .score-financial-wrapper {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            max-width: 850px;
-            width: 100%;
-            box-sizing: border-box;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .score-container, .financial-container {
+        .score-container {
             background: #fff;
             padding: 15px 20px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 10px;
+            max-width: 650px;
+            width: 100%;
             box-sizing: border-box;
         }
 
-        .score-container { flex: 2; min-width: 400px; }
-        .financial-container { flex: 1; min-width: 250px; }
-
-        .score-container h3, .financial-container h3 {
+        .score-container h3 {
             margin: 0;
             font-size: 15px;
             text-transform: uppercase;
@@ -139,7 +128,7 @@
             text-overflow: ellipsis;
         }
 
-        .score-input, .cost-input {
+        .score-input {
             width: 100%;
             padding: 6px;
             font-size: 15px;
@@ -155,113 +144,19 @@
         .score-input.home-score-input { background-color: var(--home-color); }
         .score-input.away-score-input { background-color: var(--away-color); }
 
-        .cost-input {
-            color: #212529;
-            background-color: #f8f9fa;
-            max-width: 150px;
-        }
-
-        .score-input:focus, .cost-input:focus {
+        .score-input:focus {
             outline: none;
             box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #333333;
             transform: scale(1.05);
             z-index: 2;
         }
 
-        .financial-stats {
-            font-size: 13px;
-            color: #444;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            width: 100%;
-            padding: 0 10px;
-        }
-
-        .financial-stat-row {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .financial-stat-row span:last-child {
-            font-weight: bold;
-            color: #0f5132;
-        }
-
-        /* Winner Scoreboard Panel */
-        .winner-scoreboard {
-            background: #fff;
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 15px;
-            max-width: 850px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .winner-scoreboard h3 {
-            margin: 0 0 10px 0;
-            font-size: 15px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #333;
-            text-align: center;
-        }
-
-        .winner-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-        }
-
-        .winner-card {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            padding: 8px 10px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .winner-card-q {
-            font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
-            color: #666;
-        }
-
-        .winner-card-score {
-            font-size: 12px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .winner-card-owner {
-            font-size: 13px;
-            font-weight: bold;
-            color: #0f5132;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .winner-card-payout {
-            font-size: 12px;
-            color: #28a745;
-            font-weight: bold;
-        }
-
         .score-input::-webkit-outer-spin-button,
-        .score-input::-webkit-inner-spin-button,
-        .cost-input::-webkit-outer-spin-button,
-        .cost-input::-webkit-inner-spin-button {
+        .score-input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-        .score-input[type=number], .cost-input[type=number] { -moz-appearance: textfield; }
+        .score-input[type=number] { -moz-appearance: textfield; }
 
         .controls {
             margin-bottom: 20px;
@@ -476,16 +371,14 @@
             .cell.top-team-header, .cell.side-team-header { font-size: 12px; }
             .square-num { font-size: 7px; bottom: 1px; right: 2px; }
             .winner-tag { font-size: 6px; padding: 1px 2px; }
-            .score-financial-wrapper { flex-direction: column; align-items: stretch; }
             .score-grid { grid-template-columns: 80px repeat(4, 1fr); }
             .team-score-label { font-size: 11px; }
-            .winner-cards-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
         @media print {
             @page { size: portrait; margin: 0.5in; }
             body { background-color: #fff !important; padding: 0 !important; margin: 0 !important; display: block !important; }
-            h1, .view-only-banner, .team-select-container, .score-financial-wrapper, .winner-scoreboard, .controls, .modal-overlay { display: none !important; }
+            h1, .view-only-banner, .team-select-container, .score-container, .controls, .modal-overlay { display: none !important; }
             .board-container { box-shadow: none !important; padding: 0 !important; margin: 0 auto !important; display: flex !important; justify-content: center !important; }
             :root { --cell-size: 58px; }
             .grid-wrapper, .cell.top-team-header, .cell.side-team-header, .cell.square.winner { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -513,81 +406,26 @@
         </div>
     </div>
 
-    <div class="score-financial-wrapper">
-        <div class="score-container">
-            <h3>Game Scores</h3>
-            <div class="score-grid">
-                <div></div>
-                <div class="score-grid-header">Q1</div>
-                <div class="score-grid-header">Q2</div>
-                <div class="score-grid-header">Q3</div>
-                <div class="score-grid-header">Q4</div>
+    <div class="score-container">
+        <h3>Game Scores</h3>
+        <div class="score-grid">
+            <div></div>
+            <div class="score-grid-header">Q1</div>
+            <div class="score-grid-header">Q2</div>
+            <div class="score-grid-header">Q3</div>
+            <div class="score-grid-header">Q4</div>
 
-                <div class="team-score-label" id="homeScoreLabel">Home</div>
-                <input type="number" id="home_q1" class="score-input home-score-input" min="0" onchange="handleScoreInput(0, 'home')">
-                <input type="number" id="home_q2" class="score-input home-score-input" min="0" onchange="handleScoreInput(1, 'home')">
-                <input type="number" id="home_q3" class="score-input home-score-input" min="0" onchange="handleScoreInput(2, 'home')">
-                <input type="number" id="home_q4" class="score-input home-score-input" min="0" onchange="handleScoreInput(3, 'home')">
+            <div class="team-score-label" id="homeScoreLabel">Home</div>
+            <input type="number" id="home_q1" class="score-input home-score-input" min="0" onchange="handleScoreInput(0, 'home')">
+            <input type="number" id="home_q2" class="score-input home-score-input" min="0" onchange="handleScoreInput(1, 'home')">
+            <input type="number" id="home_q3" class="score-input home-score-input" min="0" onchange="handleScoreInput(2, 'home')">
+            <input type="number" id="home_q4" class="score-input home-score-input" min="0" onchange="handleScoreInput(3, 'home')">
 
-                <div class="team-score-label" id="awayScoreLabel">Away</div>
-                <input type="number" id="away_q1" class="score-input away-score-input" min="0" onchange="handleScoreInput(0, 'away')">
-                <input type="number" id="away_q2" class="score-input away-score-input" min="0" onchange="handleScoreInput(1, 'away')">
-                <input type="number" id="away_q3" class="score-input away-score-input" min="0" onchange="handleScoreInput(2, 'away')">
-                <input type="number" id="away_q4" class="score-input away-score-input" min="0" onchange="handleScoreInput(3, 'away')">
-            </div>
-        </div>
-
-        <div class="financial-container">
-            <h3>Pool Financials</h3>
-            <div class="select-group" style="width: 100%; align-items: center;">
-                <label for="costPerSquareInput">Cost Per Square ($)</label>
-                <input type="number" id="costPerSquareInput" class="cost-input" min="0" step="0.5" value="1" onchange="handleCostChange()">
-            </div>
-            <div class="financial-stats">
-                <div class="financial-stat-row">
-                    <span>Claimed Squares:</span>
-                    <span id="statClaimedCount">0 / 100</span>
-                </div>
-                <div class="financial-stat-row">
-                    <span>Total Pot:</span>
-                    <span id="statTotalPot">$0.00</span>
-                </div>
-                <div class="financial-stat-row">
-                    <span>Payout / Quarter:</span>
-                    <span id="statQuarterPayout">$0.00</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quarter Winner Scoreboard -->
-    <div class="winner-scoreboard">
-        <h3>Quarter Winner Scoreboard</h3>
-        <div class="winner-cards-grid">
-            <div class="winner-card" id="winnerCard0">
-                <div class="winner-card-q">Quarter 1</div>
-                <div class="winner-card-score" id="wScore0">Score: —</div>
-                <div class="winner-card-owner" id="wOwner0">Unclaimed</div>
-                <div class="winner-card-payout" id="wPayout0">$0.00</div>
-            </div>
-            <div class="winner-card" id="winnerCard1">
-                <div class="winner-card-q">Quarter 2 (Half)</div>
-                <div class="winner-card-score" id="wScore1">Score: —</div>
-                <div class="winner-card-owner" id="wOwner1">Unclaimed</div>
-                <div class="winner-card-payout" id="wPayout1">$0.00</div>
-            </div>
-            <div class="winner-card" id="winnerCard2">
-                <div class="winner-card-q">Quarter 3</div>
-                <div class="winner-card-score" id="wScore2">Score: —</div>
-                <div class="winner-card-owner" id="wOwner2">Unclaimed</div>
-                <div class="winner-card-payout" id="wPayout2">$0.00</div>
-            </div>
-            <div class="winner-card" id="winnerCard3">
-                <div class="winner-card-q">Quarter 4 (Final)</div>
-                <div class="winner-card-score" id="wScore3">Score: —</div>
-                <div class="winner-card-owner" id="wOwner3">Unclaimed</div>
-                <div class="winner-card-payout" id="wPayout3">$0.00</div>
-            </div>
+            <div class="team-score-label" id="awayScoreLabel">Away</div>
+            <input type="number" id="away_q1" class="score-input away-score-input" min="0" onchange="handleScoreInput(0, 'away')">
+            <input type="number" id="away_q2" class="score-input away-score-input" min="0" onchange="handleScoreInput(1, 'away')">
+            <input type="number" id="away_q3" class="score-input away-score-input" min="0" onchange="handleScoreInput(2, 'away')">
+            <input type="number" id="away_q4" class="score-input away-score-input" min="0" onchange="handleScoreInput(3, 'away')">
         </div>
     </div>
 
@@ -675,7 +513,6 @@
         let boardData = {
             homeIndex: 11,
             awayIndex: 5,
-            costPerSquare: 1,
             topNumbers: Array(10).fill('?'),
             leftNumbers: Array(10).fill('?'),
             squares: Array(100).fill(''),
@@ -702,7 +539,6 @@
                 document.getElementById('viewOnlyBanner').style.display = 'block';
                 document.getElementById('homeSelect').disabled = true;
                 document.getElementById('awaySelect').disabled = true;
-                document.getElementById('costPerSquareInput').disabled = true;
 
                 // Lock down all score inputs for viewers
                 const allScoreInputs = document.querySelectorAll('.score-input');
@@ -721,8 +557,6 @@
             db.ref('boards/' + boardId).on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    // Ensure compatibility if old data schema lacks costPerSquare
-                    if (data.costPerSquare === undefined) data.costPerSquare = 1;
                     boardData = data;
                     updateUIFromState();
                 }
@@ -741,7 +575,6 @@
         function updateUIFromState() {
             document.getElementById('homeSelect').value = boardData.homeIndex;
             document.getElementById('awaySelect').value = boardData.awayIndex;
-            document.getElementById('costPerSquareInput').value = boardData.costPerSquare;
 
             const homeTeam = nflTeams[boardData.homeIndex];
             const awayTeam = nflTeams[boardData.awayIndex];
@@ -756,9 +589,7 @@
                 document.getElementById(`away_q${q}`).value = boardData.quarterScores.away[q - 1] ?? '';
             }
 
-            updateFinancials();
             renderBoard();
-            updateScoreboardCards();
 
             // Check quarter winners for popup triggers
             for (let q = 0; q < 4; q++) {
@@ -775,24 +606,6 @@
             boardData.homeIndex = document.getElementById('homeSelect').value;
             boardData.awayIndex = document.getElementById('awaySelect').value;
             saveBoardToFirebase();
-        }
-
-        function handleCostChange() {
-            if (isViewOnly) return;
-            const val = parseFloat(document.getElementById('costPerSquareInput').value);
-            boardData.costPerSquare = !isNaN(val) && val >= 0 ? val : 0;
-            saveBoardToFirebase();
-        }
-
-        function updateFinancials() {
-            const claimedCount = boardData.squares.filter(s => s && s.trim() !== '').length;
-            const cost = parseFloat(boardData.costPerSquare) || 0;
-            const totalPot = claimedCount * cost;
-            const quarterPayout = totalPot / 4;
-
-            document.getElementById('statClaimedCount').textContent = `${claimedCount} / 100`;
-            document.getElementById('statTotalPot').textContent = `$${totalPot.toFixed(2)}`;
-            document.getElementById('statQuarterPayout').textContent = `$${quarterPayout.toFixed(2)}`;
         }
 
         function handleScoreInput(qIdx, teamSide) {
@@ -865,54 +678,16 @@
 
                 if (colIndex !== -1 && rowIndex !== -1) {
                     const cellIdx = rowIndex * 10 + colIndex;
-                    const owner = boardData.squares[cellIdx] ? boardData.squares[cellIdx] : 'Unclaimed Square';
-                    const claimedCount = boardData.squares.filter(s => s && s.trim() !== '').length;
-                    const totalPot = claimedCount * (parseFloat(boardData.costPerSquare) || 0);
-                    const payout = totalPot / 4;
+                    const owner = boardData.squares[cellIdx] ? `<strong>${boardData.squares[cellIdx]}</strong>` : '<em>Unclaimed Square</em>';
                     const scoreKey = `${hVal}-${aVal}-${owner}`;
 
                     if (lastAlertedWinners[qIdx] !== scoreKey) {
                         lastAlertedWinners[qIdx] = scoreKey;
-                        showWinnerModal(`<strong>Q${qIdx + 1} Winner:</strong><br><strong>${owner}</strong><br>Payout: $${payout.toFixed(2)}<br>Square #${cellIdx + 1} (${nflTeams[boardData.homeIndex].mascot}: ${hVal}, ${nflTeams[boardData.awayIndex].mascot}: ${aVal})`);
+                        showWinnerModal(`<strong>Q${qIdx + 1} Winner:</strong><br>${owner}<br>Square #${cellIdx + 1} (${nflTeams[boardData.homeIndex].mascot}: ${hVal}, ${nflTeams[boardData.awayIndex].mascot}: ${aVal})`);
                     }
                 }
             } else {
                 lastAlertedWinners[qIdx] = '';
-            }
-        }
-
-        function updateScoreboardCards() {
-            const claimedCount = boardData.squares.filter(s => s && s.trim() !== '').length;
-            const totalPot = claimedCount * (parseFloat(boardData.costPerSquare) || 0);
-            const payout = totalPot / 4;
-
-            for (let q = 0; q < 4; q++) {
-                const hVal = boardData.quarterScores.home[q];
-                const aVal = boardData.quarterScores.away[q];
-                const scoreElem = document.getElementById(`wScore${q}`);
-                const ownerElem = document.getElementById(`wOwner${q}`);
-                const payoutElem = document.getElementById(`wPayout${q}`);
-
-                payoutElem.textContent = `$${payout.toFixed(2)}`;
-
-                if (hVal !== '' && aVal !== '' && !isNaN(hVal) && !isNaN(aVal)) {
-                    scoreElem.textContent = `${nflTeams[boardData.homeIndex].mascot} ${hVal} - ${nflTeams[boardData.awayIndex].mascot} ${aVal}`;
-                    const hDigit = parseInt(hVal.slice(-1), 10);
-                    const aDigit = parseInt(aVal.slice(-1), 10);
-                    const colIndex = boardData.topNumbers.indexOf(hDigit);
-                    const rowIndex = boardData.leftNumbers.indexOf(aDigit);
-
-                    if (colIndex !== -1 && rowIndex !== -1) {
-                        const cellIdx = rowIndex * 10 + colIndex;
-                        const owner = boardData.squares[cellIdx];
-                        ownerElem.textContent = owner ? owner : 'Unclaimed Square';
-                    } else {
-                        ownerElem.textContent = 'Axis numbers pending';
-                    }
-                } else {
-                    scoreElem.textContent = 'Score: —';
-                    ownerElem.textContent = 'Waiting for score...';
-                }
             }
         }
 
