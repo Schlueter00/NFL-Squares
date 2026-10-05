@@ -7,7 +7,6 @@
  <!-- Firebase App & Realtime Database CDN -->
  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
- <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
  <style>
  :root {
@@ -634,13 +633,6 @@
  };
 
  firebase.initializeApp(firebaseConfig);
- firebase.auth().signInAnonymously()
-  .then(() => {
-    console.log("Logged in anonymously behind the scenes");
-  })
-  .catch((error) => {
-    console.error("Anonymous auth error:", error);
-  }); 
  const db = firebase.database();
 
  const nflTeams = [
